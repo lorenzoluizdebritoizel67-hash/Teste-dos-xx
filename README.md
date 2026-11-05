@@ -789,10 +789,10 @@ task.spawn(function()
 	end
 end)
 
--- SISTEMA DOS 2 NOVOS BOTÕES (AUTO KILL ASSASSINO & AUTO KILL ALL MURDER)
+-- SISTEMA DE AUTO KILL CORRIGIDO (AUTO KILL ASSASSINO & AUTO KILL ALL MURDER)
 task.spawn(function()
 	while true do
-		task.wait(0.2)
+		task.wait(0.1)
 		pcall(function()
 			local meuChar = p.Character
 			local hrp = meuChar and meuChar:FindFirstChild("HumanoidRootPart")
@@ -801,32 +801,33 @@ task.spawn(function()
 			
 			local meuPapel = detectarPapelMM2(p)
 			
-			-- 1. Auto Kill Assassino (Se você for Xerife)
-			if autoKillAssassinoAtivo and meuPapel == "Sheriff" then
-				local temArma = meuChar:FindFirstChildOfClass("Tool") or (p:FindFirstChildOfClass("Backpack") and p.Backpack:FindFirstChildOfClass("Tool"))
-				if temArma then
-					for _, plr in pairs(Pessoas:GetPlayers()) do
-						if plr ~= p and detectarPapelMM2(plr) == "Murderer" and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-							local alvoHrp = plr.Character.HumanoidRootPart
-							hrp.CFrame = alvoHrp.CFrame * CFrame.new(0, 0, 3) -- Vai para as costas do assassino
-							
-							local tool = meuChar:FindFirstChildOfClass("Tool")
-							if not tool then
-								for _, item in pairs(p.Backpack:GetChildren()) do
-									if item:IsA("Tool") and (item.Name:lower():find("gun") or item.Name:lower():find("revolver") or item.Name:lower():find("arma")) then
-										item.Parent = meuChar
-										tool = item
-										break
-									end
+			-- 1. Auto Kill Assassino (Se você for Xerife / tiver a arma)
+			if autoKillAssassinoAtivo and (meuPapel == "Sheriff" or meuChar:FindFirstChild("Gun") or (p:FindFirstChildOfClass("Backpack") and p.Backpack:FindFirstChild("Gun"))) then
+				for _, plr in pairs(Pessoas:GetPlayers()) do
+					if plr ~= p and detectarPapelMM2(plr) == "Murderer" and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+						local alvoHrp = plr.Character.HumanoidRootPart
+						
+						-- Teleporta para as costas do assassino
+						hrp.CFrame = alvoHrp.CFrame * CFrame.new(0, 0, 3)
+						
+						-- Equipa a arma automaticamente se estiver na mochila
+						local tool = meuChar:FindFirstChildOfClass("Tool")
+						if not tool or (tool.Name ~= "Gun" and not tool.Name:lower():find("gun")) then
+							for _, item in pairs(p.Backpack:GetChildren()) do
+								if item:IsA("Tool") and (item.Name == "Gun" or item.Name:lower():find("gun") or item.Name:lower():find("revolver")) then
+									item.Parent = meuChar
+									tool = item
+									break
 								end
 							end
-							
-							if tool then
-								tool:Activate()
-								Camera.CFrame = CFrame.new(Camera.CFrame.Position, alvoHrp.Position)
-							end
-							break
 						end
+						
+						-- Dispara a arma no tronco/corpo do assassino
+						if tool and tool.Parent == meuChar then
+							tool:Activate()
+							Camera.CFrame = CFrame.new(Camera.CFrame.Position, alvoHrp.Position)
+						end
+						break
 					end
 				end
 			end
