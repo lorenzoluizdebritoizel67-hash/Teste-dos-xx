@@ -204,9 +204,8 @@ local mm2InocenteAtivo = false
 local tpAutogunAtivo = false
 local aimbotApenasAssassinoAtivo = false
 local mm2AutoFarmAtivo = false
-local autoKillSheriffAtivo = false
+local autoKillAssassinoAtivo = false
 local autoKillAllMurderAtivo = false
-
 local mm2Boxes = {}
 local mm2Tags = {}
 local mm2TracerLines = {}
@@ -229,6 +228,35 @@ local estadoCicloTp = 1
 local mm2EspArmaAtivo = false
 local highlightArma = nil
 local tagArma = nil
+
+local function detectarPapelMM2(plr)
+	local char = plr.Character
+	local backpack = plr:FindFirstChildOfClass("Backpack")
+	local temFaca, temArma = false, false
+	
+	local function verificarObjeto(obj)
+		if obj:IsA("Tool") then
+			local nome = obj.Name:lower()
+			if nome:find("knife") or nome:find("faca") then
+				temFaca = true
+			elseif nome:find("gun") or nome:find("revolver") or nome:find("arma") then
+				temArma = true
+			end
+		end
+	end
+	
+	if char then
+		for _, v in pairs(char:GetChildren()) do verificarObjeto(v) end
+	end
+	if backpack then
+		for _, v in pairs(backpack:GetChildren()) do verificarObjeto(v) end
+	end
+	
+	if temFaca then return "Murderer"
+	elseif temArma then return "Sheriff"
+	end
+	return "Innocent"
+end
 
 local function atualizarEspArma()
 	local gunObj = nil
@@ -402,7 +430,7 @@ local abaScripts = criarAreaConteudo()
 abaScripts.CanvasSize = UDim2.new(0, 0, 0, 400)
 
 local abaMm2 = criarAreaConteudo()
-abaMm2.CanvasSize = UDim2.new(0, 0, 0, 600)
+abaMm2.CanvasSize = UDim2.new(0, 0, 0, 560)
 
 local abaInuteis = criarAreaConteudo()
 abaInuteis.CanvasSize = UDim2.new(0, 0, 0, 300)
@@ -620,12 +648,12 @@ local espArmaBtn = criarBtn(abaMm2, "ESP da Arma do Xerife: OFF", UDim2.new(0, 0
 local killAllFacaBtn = criarBtn(abaMm2, "Puxar Hitbox p/ Mim (Murder Kill All)", UDim2.new(0, 0, 0, 175))
 local aimbotAssassinoBtn = criarBtn(abaMm2, "Aimbot Apenas no Assassino: OFF", UDim2.new(0, 0, 0, 210))
 local mm2AutoFarmBtn = criarBtn(abaMm2, "Auto Farm: OFF", UDim2.new(0, 0, 0, 245))
-local autoKillSheriffBtn = criarBtn(abaMm2, "Auto Kill Assassino (Sheriff): OFF", UDim2.new(0, 0, 0, 280))
-local autoKillAllMurderBtn = criarBtn(abaMm2, "Auto Kill All (Murder): OFF", UDim2.new(0, 0, 0, 315))
+local autoKillAssassinoBtn = criarBtn(abaMm2, "Auto Kill Assassino: OFF", UDim2.new(0, 0, 0, 280))
+local autoKillAllMurderBtn = criarBtn(abaMm2, "Auto Kill All Murder: OFF", UDim2.new(0, 0, 0, 315))
 
 killAllFacaBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
 mm2AutoFarmBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-autoKillSheriffBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+autoKillAssassinoBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 autoKillAllMurderBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 
 mm2AssassinoBtn.MouseButton1Click:Connect(function()
@@ -678,22 +706,22 @@ mm2AutoFarmBtn.MouseButton1Click:Connect(function()
 	mm2AutoFarmBtn.BackgroundColor3 = mm2AutoFarmAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
 end)
 
-autoKillSheriffBtn.MouseButton1Click:Connect(function()
-	autoKillSheriffAtivo = not autoKillSheriffAtivo
-	autoKillSheriffBtn.Text = autoKillSheriffAtivo and "Auto Kill Assassino (Sheriff): ON" or "Auto Kill Assassino (Sheriff): OFF"
-	autoKillSheriffBtn.BackgroundColor3 = autoKillSheriffAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+autoKillAssassinoBtn.MouseButton1Click:Connect(function()
+	autoKillAssassinoAtivo = not autoKillAssassinoAtivo
+	autoKillAssassinoBtn.Text = autoKillAssassinoAtivo and "Auto Kill Assassino: ON" or "Auto Kill Assassino: OFF"
+	autoKillAssassinoBtn.BackgroundColor3 = autoKillAssassinoAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
 end)
 
 autoKillAllMurderBtn.MouseButton1Click:Connect(function()
 	autoKillAllMurderAtivo = not autoKillAllMurderAtivo
-	autoKillAllMurderBtn.Text = autoKillAllMurderAtivo and "Auto Kill All (Murder): ON" or "Auto Kill All (Murder): OFF"
+	autoKillAllMurderBtn.Text = autoKillAllMurderAtivo and "Auto Kill All Murder: ON" or "Auto Kill All Murder: OFF"
 	autoKillAllMurderBtn.BackgroundColor3 = autoKillAllMurderAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
 end)
 
--- SISTEMA DE AUTO FARM CORRIGIDO (VOANDO SUAVE ATÉ AS MOEDAS)
+-- SISTEMA DE AUTO FARM
 task.spawn(function()
 	while true do
-		task.wait(0.05)
+		task.wait(0.03)
 		if mm2AutoFarmAtivo then
 			pcall(function()
 				local char = p.Character
@@ -732,10 +760,18 @@ task.spawn(function()
 						
 						if moedaAlvo and moedaAlvo.Parent then
 							hum.PlatformStand = true
-							local destino = moedaAlvo.Position + Vector3.new(0, 0.5, 0)
-							hrp.CFrame = hrp.CFrame:Lerp(CFrame.new(destino), 0.3)
-							hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-							hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+							local destino = moedaAlvo.Position
+							local distanciaAtual = (hrp.Position - destino).Magnitude
+							
+							if distanciaAtual > 1.5 then
+								hrp.CFrame = hrp.CFrame:Lerp(CFrame.new(destino), 0.2)
+								hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+								hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+							else
+								hrp.CFrame = CFrame.new(destino)
+								hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+								hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+							end
 						else
 							hum.PlatformStand = false
 						end
@@ -750,6 +786,76 @@ task.spawn(function()
 				if hum then hum.PlatformStand = false end
 			end)
 		end
+	end
+end)
+
+-- SISTEMA DOS 2 NOVOS BOTÕES (AUTO KILL ASSASSINO & AUTO KILL ALL MURDER)
+task.spawn(function()
+	while true do
+		task.wait(0.2)
+		pcall(function()
+			local meuChar = p.Character
+			local hrp = meuChar and meuChar:FindFirstChild("HumanoidRootPart")
+			local hum = meuChar and meuChar:FindFirstChildOfClass("Humanoid")
+			if not hrp or not hum or hum.Health <= 0 then return end
+			
+			local meuPapel = detectarPapelMM2(p)
+			
+			-- 1. Auto Kill Assassino (Se você for Xerife)
+			if autoKillAssassinoAtivo and meuPapel == "Sheriff" then
+				local temArma = meuChar:FindFirstChildOfClass("Tool") or (p:FindFirstChildOfClass("Backpack") and p.Backpack:FindFirstChildOfClass("Tool"))
+				if temArma then
+					for _, plr in pairs(Pessoas:GetPlayers()) do
+						if plr ~= p and detectarPapelMM2(plr) == "Murderer" and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+							local alvoHrp = plr.Character.HumanoidRootPart
+							hrp.CFrame = alvoHrp.CFrame * CFrame.new(0, 0, 3) -- Vai para as costas do assassino
+							
+							local tool = meuChar:FindFirstChildOfClass("Tool")
+							if not tool then
+								for _, item in pairs(p.Backpack:GetChildren()) do
+									if item:IsA("Tool") and (item.Name:lower():find("gun") or item.Name:lower():find("revolver") or item.Name:lower():find("arma")) then
+										item.Parent = meuChar
+										tool = item
+										break
+									end
+								end
+							end
+							
+							if tool then
+								tool:Activate()
+								Camera.CFrame = CFrame.new(Camera.CFrame.Position, alvoHrp.Position)
+							end
+							break
+						end
+					end
+				end
+			end
+			
+			-- 2. Auto Kill All Murder (Se você for o Assassino)
+			if autoKillAllMurderAtivo and meuPapel == "Murderer" then
+				local tool = meuChar:FindFirstChildOfClass("Tool")
+				if not tool then
+					for _, item in pairs(p.Backpack:GetChildren()) do
+						if item:IsA("Tool") and (item.Name:lower():find("knife") or item.Name:lower():find("faca")) then
+							item.Parent = meuChar
+							tool = item
+							break
+						end
+					end
+				end
+				
+				if tool then
+					for _, plr in pairs(Pessoas:GetPlayers()) do
+						if plr ~= p and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+							local alvHrp = plr.Character.HumanoidRootPart
+							alvHrp.CFrame = hrp.CFrame * CFrame.new(0, 0, -2)
+							alvHrp.CanCollide = false
+						end
+					end
+					tool:Activate()
+				end
+			end
+		end)
 	end
 end)
 
@@ -785,150 +891,10 @@ killAllFacaBtn.MouseButton1Click:Connect(function()
 	end)
 end)
 
-local function detectarPapelMM2(plr)
-	local char = plr.Character
-	local backpack = plr:FindFirstChildOfClass("Backpack")
-	local temFaca, temArma = false, false
-	
-	local function verificarObjeto(obj)
-		if obj:IsA("Tool") then
-			local nome = obj.Name:lower()
-			if nome:find("knife") or nome:find("faca") then
-				temFaca = true
-			elseif nome:find("gun") or nome:find("revolver") or nome:find("arma") then
-				temArma = true
-			end
-		end
-	end
-	
-	if char then
-		for _, v in pairs(char:GetChildren()) do verificarObjeto(v) end
-	end
-	if backpack then
-		for _, v in pairs(backpack:GetChildren()) do verificarObjeto(v) end
-	end
-	
-	if temFaca then return "Murderer"
-	elseif temArma then return "Sheriff"
-	end
-	return "Innocent"
-end
-
--- ==================== CHAMS MM2 & LOOP AUTOMATIZADO ====================
+-- ==================== CHAMS MM2 & LOOP ====================
 RunService.RenderStepped:Connect(function()
 	if mm2EspArmaAtivo then
 		atualizarEspArma()
-	end
-	
-	-- AUTO KILL ASSASSINO CORRIGIDO (DELTA FRIENDLY)
-	if autoKillSheriffAtivo then
-		pcall(function()
-			local meuChar = p.Character
-			local meuHrp = meuChar and meuChar:FindFirstChild("HumanoidRootPart")
-			local meuHum = meuChar and meuChar:FindFirstChildOfClass("Humanoid")
-			
-			if meuHrp and meuHum and meuHum.Health > 0 then
-				local temArmaEquipada = false
-				local toolArma = nil
-				
-				for _, t in pairs(meuChar:GetChildren()) do
-					if t:IsA("Tool") and (t.Name:lower():find("gun") or t.Name:lower():find("revolver") or t.Name:lower():find("arma")) then
-						temArmaEquipada = true
-						toolArma = t
-						break
-					end
-				end
-				
-				if not temArmaEquipada then
-					local bp = p:FindFirstChildOfClass("Backpack")
-					if bp then
-						for _, t in pairs(bp:GetChildren()) do
-							if t:IsA("Tool") and (t.Name:lower():find("gun") or t.Name:lower():find("revolver") or t.Name:lower():find("arma")) then
-								toolArma = t
-								toolArma.Parent = meuChar
-								task.wait(0.05)
-								break
-							end
-						end
-					end
-				end
-				
-				if toolArma then
-					for _, plr in pairs(Pessoas:GetPlayers()) do
-						if plr ~= p and detectarPapelMM2(plr) == "Murderer" and plr.Character then
-							local assassinoHrp = plr.Character:FindFirstChild("HumanoidRootPart")
-							local assassinoHead = plr.Character:FindFirstChild("Head") or assassinoHrp
-							local assassinoHum = plr.Character:FindFirstChildOfClass("Humanoid")
-							
-							if assassinoHrp and assassinoHum and assassinoHum.Health > 0 then
-								Camera.CFrame = CFrame.new(Camera.CFrame.Position, assassinoHead.Position)
-								meuHrp.CFrame = CFrame.new(assassinoHrp.Position + (assassinoHrp.CFrame.LookVector * -4), assassinoHrp.Position)
-								toolArma:Activate()
-							end
-						end
-					end
-				else
-					local gunDrop = buscarArmaExistente()
-					if gunDrop then
-						executarTpArma(gunDrop)
-					end
-				end
-			end
-		end)
-	end
-
-	-- AUTO KILL ALL (MURDER) CORRIGIDO COM DELAY PARA O DELTA
-	if autoKillAllMurderAtivo then
-		pcall(function()
-			local meuChar = p.Character
-			local meuHrp = meuChar and meuChar:FindFirstChild("HumanoidRootPart")
-			local meuHum = meuChar and meuChar:FindFirstChildOfClass("Humanoid")
-			
-			if meuHrp and meuHum and meuHum.Health > 0 then
-				local temFacaEquipada = false
-				local toolFaca = nil
-				
-				for _, t in pairs(meuChar:GetChildren()) do
-					if t:IsA("Tool") and (t.Name:lower():find("knife") or t.Name:lower():find("faca")) then
-						temFacaEquipada = true
-						toolFaca = t
-						break
-					end
-				end
-				
-				if not temFacaEquipada then
-					local bp = p:FindFirstChildOfClass("Backpack")
-					if bp then
-						for _, t in pairs(bp:GetChildren()) do
-							if t:IsA("Tool") and (t.Name:lower():find("knife") or t.Name:lower():find("faca")) then
-								toolFaca = t
-								toolFaca.Parent = meuChar
-								task.wait(0.05)
-								break
-							end
-						end
-					end
-				end
-				
-				if toolFaca then
-					for _, plr in pairs(Pessoas:GetPlayers()) do
-						if plr ~= p and plr.Character then
-							local alvoHrp = plr.Character:FindFirstChild("HumanoidRootPart")
-							local alvoHum = plr.Character:FindFirstChildOfClass("Humanoid")
-							
-							if alvoHrp and alvoHum and alvoHum.Health > 0 and detectarPapelMM2(plr) ~= "Murderer" then
-								alvoHrp.CanCollide = false
-								meuHrp.CFrame = alvoHrp.CFrame * CFrame.new(0, 0, 1.2)
-								pcall(function()
-									toolFaca:Activate()
-								end)
-								task.wait(0.08)
-							end
-						end
-					end
-				end
-			end
-		end)
 	end
 	
 	for _, plr in pairs(Pessoas:GetPlayers()) do
@@ -1463,6 +1429,7 @@ local function obterAlvoAssassinoMM2()
 		if plr ~= p and plr.Character and detectarPapelMM2(plr) == "Murderer" then
 			local h = plr.Character:FindFirstChildOfClass("Humanoid")
 			if h and h.Health > 0 then
+				-- Forçado para o Peito/Tronco no MM2
 				local parteAlvoObj = plr.Character:FindFirstChild("HumanoidRootPart") or plr.Character:FindFirstChild("UpperTorso") or plr.Character:FindFirstChild("Torso")
 				if parteAlvoObj then
 					local screenPos, onScreen = Camera:WorldToViewportPoint(parteAlvoObj.Position)
@@ -1837,6 +1804,7 @@ RunService.RenderStepped:Connect(function()
 		atualizarESP()
 	end
 	
+	-- LOOP DOS AIMBOTS CORRIGIDO
 	if aimbotApenasAssassinoAtivo then
 		fovCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 		local alvoParte = obterAlvoAssassinoMM2()
