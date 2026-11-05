@@ -789,10 +789,10 @@ task.spawn(function()
 	end
 end)
 
--- SISTEMA DE AUTO KILL CORRIGIDO (AUTO KILL ASSASSINO & AUTO KILL ALL MURDER)
+-- SISTEMA DE AUTO KILL CORRIGIDO E OTIMIZADO PARA ALVOS EM MOVIMENTO
 task.spawn(function()
 	while true do
-		task.wait(0.1)
+		task.wait(0.04)
 		pcall(function()
 			local meuChar = p.Character
 			local hrp = meuChar and meuChar:FindFirstChild("HumanoidRootPart")
@@ -807,10 +807,11 @@ task.spawn(function()
 					if plr ~= p and detectarPapelMM2(plr) == "Murderer" and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
 						local alvoHrp = plr.Character.HumanoidRootPart
 						
-						-- Teleporta para as costas do assassino
-						hrp.CFrame = alvoHrp.CFrame * CFrame.new(0, 0, 3)
+						-- PREVISÃO DE MOVIMENTO: Antecipa para onde o assassino está correndo e cola nele
+						local velocidadeAlvo = alvoHrp.AssemblyLinearVelocity
+						hrp.CFrame = (alvoHrp.CFrame + (velocidadeAlvo * 0.08)) * CFrame.new(0, 0, 2.2)
 						
-						-- Equipa a arma automaticamente se estiver na mochila
+						-- Equipa a arma automaticamente se estiver guardada
 						local tool = meuChar:FindFirstChildOfClass("Tool")
 						if not tool or (tool.Name ~= "Gun" and not tool.Name:lower():find("gun")) then
 							for _, item in pairs(p.Backpack:GetChildren()) do
@@ -822,10 +823,10 @@ task.spawn(function()
 							end
 						end
 						
-						-- Dispara a arma no tronco/corpo do assassino
+						-- Dispara instantaneamente travando a mira no tronco do assassino
 						if tool and tool.Parent == meuChar then
-							tool:Activate()
 							Camera.CFrame = CFrame.new(Camera.CFrame.Position, alvoHrp.Position)
+							tool:Activate()
 						end
 						break
 					end
