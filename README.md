@@ -6,6 +6,7 @@ local PlayerGui = p:WaitForChild("PlayerGui")
 local keyGui = Instance.new("ScreenGui", PlayerGui)
 keyGui.Name = "LorenzoKeySystem"
 keyGui.ResetOnSpawn = false
+keyGui.DisplayOrder = 100
 
 local keyFrame = Instance.new("Frame", keyGui)
 keyFrame.Size = UDim2.new(0, 300, 0, 180)
@@ -16,7 +17,7 @@ keyFrame.Active = true
 keyFrame.Draggable = true
 
 local cornerKey = Instance.new("UICorner", keyFrame)
-cornerKey.CornerRadius = UDim2.new(0, 10)
+cornerKey.CornerRadius = UDim.new(0, 10)
 
 local strokeKey = Instance.new("UIStroke", keyFrame)
 strokeKey.Color = Color3.fromRGB(255, 0, 0)
@@ -42,7 +43,7 @@ textBoxKey.TextSize = 14
 textBoxKey.Text = ""
 
 local cornerBox = Instance.new("UICorner", textBoxKey)
-cornerBox.CornerRadius = UDim2.new(0, 6)
+cornerBox.CornerRadius = UDim.new(0, 6)
 
 local btnEntrar = Instance.new("TextButton", keyFrame)
 btnEntrar.Size = UDim2.new(0.8, 0, 0, 35)
@@ -54,7 +55,7 @@ btnEntrar.Font = Enum.Font.Code
 btnEntrar.TextSize = 16
 
 local cornerBtn = Instance.new("UICorner", btnEntrar)
-cornerBtn.CornerRadius = UDim2.new(0, 6)
+cornerBtn.CornerRadius = UDim.new(0, 6)
 
 local keyAprovada = false
 
@@ -73,6 +74,7 @@ repeat task.wait() until keyAprovada
 
 -- ==================== TELA PRETA DE INTRO ====================
 local introGui = Instance.new("ScreenGui", PlayerGui)
+introGui.Name = "LorenzoIntroGui"
 introGui.DisplayOrder = 9999
 introGui.ResetOnSpawn = false
 
@@ -86,15 +88,20 @@ textoIntro.Size = UDim2.new(1, 0, 1, 0)
 textoIntro.BackgroundTransparency = 1
 textoIntro.Text = "Lorenzo Hub"
 textoIntro.TextColor3 = Color3.fromRGB(255, 0, 0)
-textoIntro.TextSize = 80
+textoIntro.TextSize = 60
+textoIntro.TextScaled = true
 textoIntro.Font = Enum.Font.Code
 
-task.wait(2.5)
+local constraintIntro = Instance.new("UITextSizeConstraint", textoIntro)
+constraintIntro.MaxTextSize = 80
+constraintIntro.MinTextSize = 24
 
-for i = 0, 1, 0.05 do
+task.wait(1.8)
+
+for i = 0, 1, 0.08 do
 	fundoPreto.BackgroundTransparency = i
 	textoIntro.TextTransparency = i
-	task.wait(0.04)
+	task.wait(0.03)
 end
 
 introGui:Destroy()
@@ -114,6 +121,7 @@ end
 local gui = Instance.new("ScreenGui")
 gui.Name = "xX_XxHub"
 gui.ResetOnSpawn = false
+gui.DisplayOrder = 50
 gui.Parent = p:WaitForChild("PlayerGui")
 
 local function addCorner(parent, radius)
@@ -378,6 +386,7 @@ f.BorderSizePixel = 0
 f.Active = true
 f.Draggable = true
 f.Visible = true
+f.ZIndex = 2
 addCorner(f, 12)
 
 local strokeMain = Instance.new("UIStroke", f)
@@ -394,7 +403,7 @@ titulo.TextSize = 16
 titulo.TextColor3 = Color3.fromRGB(255, 0, 0)
 titulo.TextXAlignment = Enum.TextXAlignment.Left
 titulo.BackgroundTransparency = 1
-titulo.ZIndex = 2
+titulo.ZIndex = 4
 
 local fechar = Instance.new("TextButton", f)
 fechar.Size = UDim2.new(0, 24, 0, 24)
@@ -403,10 +412,10 @@ fechar.Text = "✕"
 fechar.Font = Enum.Font.GothamBold
 fechar.TextSize = 13
 fechar.TextColor3 = Color3.fromRGB(255, 0, 0)
-fechar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+fechar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 fechar.BorderSizePixel = 0
 addCorner(fechar, 6)
-fechar.ZIndex = 2
+fechar.ZIndex = 4
 
 -- ==================== ÁREA DE CONTEÚDO ====================
 local function criarAreaConteudo()
@@ -416,7 +425,7 @@ local function criarAreaConteudo()
 	sc.BackgroundTransparency = 1
 	sc.ScrollBarThickness = 4
 	sc.Visible = false
-	sc.ZIndex = 2
+	sc.ZIndex = 4
 	return sc
 end
 
@@ -444,7 +453,7 @@ local sidebar = Instance.new("Frame", f)
 sidebar.Size = UDim2.new(0, 95, 1, -45)
 sidebar.Position = UDim2.new(1, -105, 0, 38)
 sidebar.BackgroundTransparency = 1
-sidebar.ZIndex = 2
+sidebar.ZIndex = 4
 
 local function criarAbaBtn(txt, yPos)
 	local b = Instance.new("TextButton", sidebar)
@@ -454,16 +463,16 @@ local function criarAbaBtn(txt, yPos)
 	b.Font = Enum.Font.Code
 	b.TextSize = 8
 	b.TextColor3 = Color3.fromRGB(200, 150, 150)
-	b.BackgroundTransparency = 0.5
-	b.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	b.BackgroundTransparency = 0.2
+	b.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 	b.BorderSizePixel = 0
-	b.ZIndex = 2
+	b.ZIndex = 5
 	addCorner(b, 6)
 	return b
 end
 
 local abaJogadorBtn = criarAbaBtn("Jogador", 0)
-abaJogadorBtn.BackgroundTransparency = 0.2
+abaJogadorBtn.BackgroundTransparency = 0.1
 abaJogadorBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
 abaJogadorBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 
@@ -481,28 +490,22 @@ local function mudarAba(ativa)
 	abaInuteis.Visible = (ativa == 5)
 	abaConfig.Visible = (ativa == 6)
 
-	abaJogadorBtn.BackgroundTransparency = (ativa == 1) and 0.2 or 0.5
-	abaJogadorBtn.BackgroundColor3 = (ativa == 1) and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	abaJogadorBtn.BackgroundColor3 = (ativa == 1) and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	abaJogadorBtn.TextColor3 = (ativa == 1) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 150, 150)
 
-	abaListaBtn.BackgroundTransparency = (ativa == 2) and 0.2 or 0.5
-	abaListaBtn.BackgroundColor3 = (ativa == 2) and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	abaListaBtn.BackgroundColor3 = (ativa == 2) and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	abaListaBtn.TextColor3 = (ativa == 2) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 150, 150)
 
-	abaScriptsBtn.BackgroundTransparency = (ativa == 3) and 0.2 or 0.5
-	abaScriptsBtn.BackgroundColor3 = (ativa == 3) and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	abaScriptsBtn.BackgroundColor3 = (ativa == 3) and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	abaScriptsBtn.TextColor3 = (ativa == 3) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 150, 150)
 
-	abaMm2Btn.BackgroundTransparency = (ativa == 4) and 0.2 or 0.5
-	abaMm2Btn.BackgroundColor3 = (ativa == 4) and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	abaMm2Btn.BackgroundColor3 = (ativa == 4) and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	abaMm2Btn.TextColor3 = (ativa == 4) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 150, 150)
 
-	abaInuteisBtn.BackgroundTransparency = (ativa == 5) and 0.2 or 0.5
-	abaInuteisBtn.BackgroundColor3 = (ativa == 5) and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	abaInuteisBtn.BackgroundColor3 = (ativa == 5) and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	abaInuteisBtn.TextColor3 = (ativa == 5) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 150, 150)
 
-	abaConfigBtn.BackgroundTransparency = (ativa == 6) and 0.2 or 0.5
-	abaConfigBtn.BackgroundColor3 = (ativa == 6) and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	abaConfigBtn.BackgroundColor3 = (ativa == 6) and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	abaConfigBtn.TextColor3 = (ativa == 6) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 150, 150)
 end
 
@@ -522,9 +525,9 @@ local function criarBtn(parent, txt, pos, size)
 	b.Font = Enum.Font.Code
 	b.TextSize = 10
 	b.TextColor3 = Color3.fromRGB(255, 200, 200)
-	b.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	b.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 	b.BorderSizePixel = 0
-	b.ZIndex = 2
+	b.ZIndex = 5
 	addCorner(b, 6)
 	table.insert(todosBotoes, b)
 	return b
@@ -589,7 +592,7 @@ local function aplicarTema(nomeTema)
 		f.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 		titulo.Font = Enum.Font.Code
 		for _, btn in pairs(todosBotoes) do
-			btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+			btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 			btn.TextColor3 = Color3.fromRGB(255, 200, 200)
 			btn.Font = Enum.Font.Code
 		end
@@ -605,7 +608,7 @@ tpMarcaLocalBtn.MouseButton1Click:Connect(function()
 	if hrp then
 		coordenadasMarcadas = hrp.CFrame
 		local pos = hrp.Position
-		tpMarcaLocalBtn.Text = string.Format("X: %.1f, Y: %.1f, Z: %.1f", pos.X, pos.Y, pos.Z)
+		tpMarcaLocalBtn.Text = string.format("X: %.1f, Y: %.1f, Z: %.1f", pos.X, pos.Y, pos.Z)
 		tpMarcaLocalBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
 	end
 end)
@@ -653,32 +656,29 @@ local autoKillAssassinoBtn = criarBtn(abaMm2, "Auto Kill Assassino: OFF", UDim2.
 local autoKillAllMurderBtn = criarBtn(abaMm2, "Auto Kill All Murder: OFF", UDim2.new(0, 0, 0, 315))
 
 killAllFacaBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-mm2AutoFarmBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-autoKillAssassinoBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-autoKillAllMurderBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 
 mm2AssassinoBtn.MouseButton1Click:Connect(function()
 	mm2AssassinoAtivo = not mm2AssassinoAtivo
 	mm2AssassinoBtn.Text = mm2AssassinoAtivo and "Ver Assassinos: ON" or "Ver Assassinos: OFF"
-	mm2AssassinoBtn.BackgroundColor3 = mm2AssassinoAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	mm2AssassinoBtn.BackgroundColor3 = mm2AssassinoAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 end)
 
 mm2XerifeBtn.MouseButton1Click:Connect(function()
 	mm2XerifeAtivo = not mm2XerifeAtivo
 	mm2XerifeBtn.Text = mm2XerifeAtivo and "Ver Xerifes/Heróis: ON" or "Ver Xerifes/Heróis: OFF"
-	mm2XerifeBtn.BackgroundColor3 = mm2XerifeAtivo and Color3.fromRGB(0, 100, 180) or Color3.fromRGB(0, 0, 0)
+	mm2XerifeBtn.BackgroundColor3 = mm2XerifeAtivo and Color3.fromRGB(0, 100, 180) or Color3.fromRGB(25, 25, 25)
 end)
 
 mm2InocenteBtn.MouseButton1Click:Connect(function()
 	mm2InocenteAtivo = not mm2InocenteAtivo
 	mm2InocenteBtn.Text = mm2InocenteAtivo and "Ver Inocentes: ON" or "Ver Inocentes: OFF"
-	mm2InocenteBtn.BackgroundColor3 = mm2InocenteAtivo and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(0, 0, 0)
+	mm2InocenteBtn.BackgroundColor3 = mm2InocenteAtivo and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(25, 25, 25)
 end)
 
 tpAutogunBtn.MouseButton1Click:Connect(function()
 	tpAutogunAtivo = not tpAutogunAtivo
 	tpAutogunBtn.Text = tpAutogunAtivo and "TP Autogun: ON" or "TP Autogun: OFF"
-	tpAutogunBtn.BackgroundColor3 = tpAutogunAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	tpAutogunBtn.BackgroundColor3 = tpAutogunAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	if tpAutogunAtivo then
 		local arma = buscarArmaExistente()
 		if arma then executarTpArma(arma) end
@@ -688,7 +688,7 @@ end)
 espArmaBtn.MouseButton1Click:Connect(function()
 	mm2EspArmaAtivo = not mm2EspArmaAtivo
 	espArmaBtn.Text = mm2EspArmaAtivo and "ESP da Arma do Xerife: ON" or "ESP da Arma do Xerife: OFF"
-	espArmaBtn.BackgroundColor3 = mm2EspArmaAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	espArmaBtn.BackgroundColor3 = mm2EspArmaAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	if not mm2EspArmaAtivo then
 		atualizarEspArma()
 	end
@@ -697,26 +697,26 @@ end)
 aimbotAssassinoBtn.MouseButton1Click:Connect(function()
 	aimbotApenasAssassinoAtivo = not aimbotApenasAssassinoAtivo
 	aimbotAssassinoBtn.Text = aimbotApenasAssassinoAtivo and "Aimbot Apenas no Assassino: ON" or "Aimbot Apenas no Assassino: OFF"
-	aimbotAssassinoBtn.BackgroundColor3 = aimbotApenasAssassinoAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	aimbotAssassinoBtn.BackgroundColor3 = aimbotApenasAssassinoAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	fovCircle.Visible = aimbotApenasAssassinoAtivo or aimbotAtivo
 end)
 
 mm2AutoFarmBtn.MouseButton1Click:Connect(function()
 	mm2AutoFarmAtivo = not mm2AutoFarmAtivo
 	mm2AutoFarmBtn.Text = mm2AutoFarmAtivo and "Auto Farm: ON" or "Auto Farm: OFF"
-	mm2AutoFarmBtn.BackgroundColor3 = mm2AutoFarmAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	mm2AutoFarmBtn.BackgroundColor3 = mm2AutoFarmAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 end)
 
 autoKillAssassinoBtn.MouseButton1Click:Connect(function()
 	autoKillAssassinoAtivo = not autoKillAssassinoAtivo
 	autoKillAssassinoBtn.Text = autoKillAssassinoAtivo and "Auto Kill Assassino: ON" or "Auto Kill Assassino: OFF"
-	autoKillAssassinoBtn.BackgroundColor3 = autoKillAssassinoAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	autoKillAssassinoBtn.BackgroundColor3 = autoKillAssassinoAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 end)
 
 autoKillAllMurderBtn.MouseButton1Click:Connect(function()
 	autoKillAllMurderAtivo = not autoKillAllMurderAtivo
 	autoKillAllMurderBtn.Text = autoKillAllMurderAtivo and "Auto Kill All Murder: ON" or "Auto Kill All Murder: OFF"
-	autoKillAllMurderBtn.BackgroundColor3 = autoKillAllMurderAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	autoKillAllMurderBtn.BackgroundColor3 = autoKillAllMurderAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 end)
 
 -- SISTEMA DE AUTO FARM
@@ -837,11 +837,9 @@ task.spawn(function()
 						if alvoHum and alvoHum.Health > 0 and alvoPart then
 							executandoTpTiroRetorno = true
 
-							-- 1. Salva o local exato de onde você estava
 							local posInicial = hrp.CFrame
 							local tool = obterOuEquiparArma(meuChar, hum)
 
-							-- 2. Calcula posição segura longe do assassino (~14 studs, fora do alcance da faca)
 							local velAlvo = alvoPart.AssemblyLinearVelocity
 							local pontoPrevisto = alvoPart.Position + (velAlvo * 0.14)
 							local direcao = (posInicial.Position - pontoPrevisto)
@@ -855,7 +853,6 @@ task.spawn(function()
 							hrp.CFrame = CFrame.lookAt(posLonge, pontoPrevisto)
 							Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, pontoPrevisto)
 
-							-- 3. Atira no assassino
 							if tool and tool.Parent == meuChar then
 								local remoteTiro = tool:FindFirstChildWhichIsA("RemoteEvent", true)
 								if remoteTiro then
@@ -868,7 +865,6 @@ task.spawn(function()
 
 							task.wait(0.18)
 
-							-- 4. Teleporta de volta para o local onde você estava
 							if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
 								local hrpAtual = p.Character.HumanoidRootPart
 								hrpAtual.AssemblyLinearVelocity = Vector3.zero
@@ -1047,7 +1043,7 @@ lblKeybind.Font = Enum.Font.Code
 lblKeybind.TextSize = 12
 lblKeybind.TextColor3 = Color3.fromRGB(255, 255, 0)
 lblKeybind.BackgroundTransparency = 1
-lblKeybind.ZIndex = 2
+lblKeybind.ZIndex = 5
 
 local btnDefinirKeybind = criarBtn(abaConfig, "Clique para definir Tecla", UDim2.new(0, 0, 0, 22))
 btnDefinirKeybind.MouseButton1Click:Connect(function()
@@ -1061,7 +1057,7 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
 		teclaAtalho = input.KeyCode
 		lblKeybind.Text = "Atalho Teclado: " .. tostring(teclaAtalho.Name)
 		btnDefinirKeybind.Text = "Alterar Tecla"
-		btnDefinirKeybind.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+		btnDefinirKeybind.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 		aguardandoTecla = false
 		return
 	end
@@ -1071,12 +1067,11 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 local toggleCaveiraBtn = criarBtn(abaConfig, "Caveira Invisível: OFF", UDim2.new(0, 0, 0, 57))
-toggleCaveiraBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 toggleCaveiraBtn.MouseButton1Click:Connect(function()
 	caveiraVisivelAtiva = not caveiraVisivelAtiva
 	titleButton.ImageTransparency = caveiraVisivelAtiva and 0 or 1
 	toggleCaveiraBtn.Text = caveiraVisivelAtiva and "Caveira Invisível: OFF" or "Caveira Invisível: ON"
-	toggleCaveiraBtn.BackgroundColor3 = caveiraVisivelAtiva and Color3.fromRGB(0, 0, 0) or Color3.fromRGB(180, 0, 0)
+	toggleCaveiraBtn.BackgroundColor3 = caveiraVisivelAtiva and Color3.fromRGB(25, 25, 25) or Color3.fromRGB(180, 0, 0)
 end)
 
 local lblTemas = Instance.new("TextLabel", abaConfig)
@@ -1087,7 +1082,7 @@ lblTemas.Font = Enum.Font.Code
 lblTemas.TextSize = 12
 lblTemas.TextColor3 = Color3.fromRGB(255, 255, 255)
 lblTemas.BackgroundTransparency = 1
-lblTemas.ZIndex = 2
+lblTemas.ZIndex = 5
 
 local btnTemaHacker = criarBtn(abaConfig, "💻 Tema Hacker", UDim2.new(0, 0, 0, 120))
 local btnTemaMinecraft = criarBtn(abaConfig, "⛏️ Tema Minecraft", UDim2.new(0, 0, 0, 155))
@@ -1105,7 +1100,7 @@ subMenuCores.Size = UDim2.new(1, 0, 0, 190)
 subMenuCores.Position = UDim2.new(0, 0, 0, 297)
 subMenuCores.BackgroundTransparency = 1
 subMenuCores.Visible = false
-subMenuCores.ZIndex = 2
+subMenuCores.ZIndex = 5
 
 local function criarSubCorBtn(txt, yPos, corDestino, isRgb)
 	local b = Instance.new("TextButton", subMenuCores)
@@ -1115,9 +1110,9 @@ local function criarSubCorBtn(txt, yPos, corDestino, isRgb)
 	b.Font = Enum.Font.Code
 	b.TextSize = 11
 	b.TextColor3 = Color3.fromRGB(255, 255, 255)
-	b.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	b.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 	b.BorderSizePixel = 0
-	b.ZIndex = 2
+	b.ZIndex = 6
 	addCorner(b, 6)
 	table.insert(todosBotoes, b)
 	
@@ -1173,7 +1168,7 @@ containerLista.Size = UDim2.new(1, 0, 1, 0)
 containerLista.BackgroundTransparency = 1
 containerLista.ScrollBarThickness = 4
 containerLista.CanvasSize = UDim2.new(0, 0, 0, 0)
-containerLista.ZIndex = 2
+containerLista.ZIndex = 5
 
 local miniPainel = Instance.new("Frame", gui)
 miniPainel.Size = UDim2.new(0, 190, 0, 125)
@@ -1219,7 +1214,7 @@ viewMiniBtn.Text = "View: OFF"
 viewMiniBtn.Font = Enum.Font.Code
 viewMiniBtn.TextSize = 10
 viewMiniBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-viewMiniBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+viewMiniBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 viewMiniBtn.BorderSizePixel = 0
 viewMiniBtn.ZIndex = 16
 addCorner(viewMiniBtn, 5)
@@ -1243,7 +1238,7 @@ fecharMini.Text = "Fechar"
 fecharMini.Font = Enum.Font.Code
 fecharMini.TextSize = 10
 fecharMini.TextColor3 = Color3.fromRGB(200, 150, 150)
-fecharMini.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+fecharMini.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 fecharMini.BorderSizePixel = 0
 fecharMini.ZIndex = 16
 addCorner(fecharMini, 5)
@@ -1252,7 +1247,7 @@ fecharMini.MouseButton1Click:Connect(function()
 	miniPainel.Visible = false
 	espectandoAtivo = false
 	viewMiniBtn.Text = "View: OFF"
-	viewMiniBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	viewMiniBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 	Camera.CameraType = Enum.CameraType.Custom
 	if p.Character and p.Character:FindFirstChildOfClass("Humanoid") then
 		Camera.CameraSubject = p.Character:FindFirstChildOfClass("Humanoid")
@@ -1278,7 +1273,7 @@ end)
 viewMiniBtn.MouseButton1Click:Connect(function()
 	espectandoAtivo = not espectandoAtivo
 	viewMiniBtn.Text = espectandoAtivo and "View: ON" or "View: OFF"
-	viewMiniBtn.BackgroundColor3 = espectandoAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	viewMiniBtn.BackgroundColor3 = espectandoAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	if espectandoAtivo and jogadorSelecionado and jogadorSelecionado.Character then
 		local humanoid = jogadorSelecionado.Character:FindFirstChildOfClass("Humanoid")
 		if humanoid then
@@ -1307,9 +1302,9 @@ local function atualizarListaPessoas()
 			btn.Font = Enum.Font.Code
 			btn.TextSize = 11
 			btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-			btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+			btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 			btn.BorderSizePixel = 0
-			btn.ZIndex = 2
+			btn.ZIndex = 6
 			addCorner(btn, 6)
 			
 			btn.MouseButton1Click:Connect(function()
@@ -1332,8 +1327,6 @@ local infit = criarBtn(abaScripts, "Infit Jump: OFF", UDim2.new(0, 0, 0, 0))
 local touchFlingBtn = criarBtn(abaScripts, "Touch Fling: OFF", UDim2.new(0, 0, 0, 32))
 local rgbBonecoBtn = criarBtn(abaScripts, "RGB Boneco (RBLGBT): OFF", UDim2.new(0, 0, 0, 64))
 local dropkickBtn = criarBtn(abaScripts, "DropKick: Executar", UDim2.new(0, 0, 0, 96))
-dropkickBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-dropkickBtn.TextColor3 = Color3.fromRGB(255, 200, 200)
 
 local travarServeBtn = criarBtn(abaScripts, "Cuidado vc vai ser lagado☢️: OFF", UDim2.new(0, 0, 0, 128))
 local transMapBtn = criarBtn(abaScripts, "Transparência: OFF", UDim2.new(0, 0, 0, 160))
@@ -1341,7 +1334,6 @@ local clickTpBtn = criarBtn(abaScripts, "Click TP (Tool)", UDim2.new(0, 0, 0, 19
 local seletorAlvoBtn = criarBtn(abaScripts, "Seletor (Tool)", UDim2.new(0, 0, 0, 224))
 local walkFlingBtn = criarBtn(abaScripts, "WalkFling: OFF", UDim2.new(0, 0, 0, 256))
 local c00lkiddThemeBtn = criarBtn(abaScripts, "c00lkidd Fake: OFF", UDim2.new(0, 0, 0, 288))
-c00lkiddThemeBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 
 local allItensBtn = criarBtn(abaScripts, "All Itens", UDim2.new(0, 0, 0, 320))
 allItensBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
@@ -1376,7 +1368,7 @@ end)
 walkFlingBtn.MouseButton1Click:Connect(function()
 	walkFlingAtivado = not walkFlingAtivado
 	walkFlingBtn.Text = walkFlingAtivado and "WalkFling: ON" or "WalkFling: OFF"
-	walkFlingBtn.BackgroundColor3 = walkFlingAtivado and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	walkFlingBtn.BackgroundColor3 = walkFlingAtivado and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	if walkFlingAtivado then
 		noclipAtivo = true
 		noclipBtn.Text = "Noclip: ON"
@@ -1437,7 +1429,7 @@ end)
 aimbotBtn.MouseButton1Click:Connect(function()
 	aimbotAtivo = not aimbotAtivo
 	aimbotBtn.Text = aimbotAtivo and "Aimbot: ON" or "Aimbot: OFF"
-	aimbotBtn.BackgroundColor3 = aimbotAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	aimbotBtn.BackgroundColor3 = aimbotAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	if not aimbotApenasAssassinoAtivo then
 		fovCircle.Visible = aimbotAtivo
 	end
@@ -1544,7 +1536,7 @@ end)
 c00lkiddThemeBtn.MouseButton1Click:Connect(function()
 	c00lkiddAtivo = not c00lkiddAtivo
 	c00lkiddThemeBtn.Text = c00lkiddAtivo and "c00lkidd Fake: ON" or "c00lkidd Fake: OFF"
-	c00lkiddThemeBtn.BackgroundColor3 = c00lkiddAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	c00lkiddThemeBtn.BackgroundColor3 = c00lkiddAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	if c00lkiddAtivo then
 		pcall(function()
 			local sky = Workspace:FindFirstChildOfClass("Sky") or Instance.new("Sky", Workspace)
@@ -1566,13 +1558,13 @@ end)
 rgbBonecoBtn.MouseButton1Click:Connect(function()
 	rgbBonecoAtivo = not rgbBonecoAtivo
 	rgbBonecoBtn.Text = rgbBonecoAtivo and "RGB Boneco (RBLGBT): ON" or "RGB Boneco (RBLGBT): OFF"
-	rgbBonecoBtn.BackgroundColor3 = rgbBonecoAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	rgbBonecoBtn.BackgroundColor3 = rgbBonecoAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 end)
 
 invisivelBtn.MouseButton1Click:Connect(function()
 	invisivelAtivo = not invisivelAtivo
 	invisivelBtn.Text = invisivelAtivo and "Invisível: ON" or "Invisível: OFF"
-	invisivelBtn.BackgroundColor3 = invisivelAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	invisivelBtn.BackgroundColor3 = invisivelAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	local char = p.Character
 	if char then
 		for _, part in pairs(char:GetDescendants()) do
@@ -1629,13 +1621,13 @@ end)
 noclipBtn.MouseButton1Click:Connect(function()
 	noclipAtivo = not noclipAtivo
 	noclipBtn.Text = noclipAtivo and "Noclip: ON" or "Noclip: OFF"
-	noclipBtn.BackgroundColor3 = noclipAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	noclipBtn.BackgroundColor3 = noclipAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 end)
 
 flyBtn.MouseButton1Click:Connect(function()
 	flyAtivo = not flyAtivo
 	flyBtn.Text = flyAtivo and "Fly: ON" or "Fly: OFF"
-	flyBtn.BackgroundColor3 = flyAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	flyBtn.BackgroundColor3 = flyAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	if flyAtivo then
 		pcall(function()
 			loadstring(game:HttpGet("https://pastebin.com/raw/TV83kUPv", true))()
@@ -1646,7 +1638,7 @@ end)
 touchFlingBtn.MouseButton1Click:Connect(function()
 	touchFlingAtivo = not touchFlingAtivo
 	touchFlingBtn.Text = touchFlingAtivo and "Touch Fling: ON" or "Touch Fling: OFF"
-	touchFlingBtn.BackgroundColor3 = touchFlingAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	touchFlingBtn.BackgroundColor3 = touchFlingAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	pcall(function()
 		if touchFlingAtivo then
 			loadstring(game:HttpGet("https://pastebin.com/raw/LgZwZ7ZB", true))()
@@ -1729,7 +1721,7 @@ end
 espBtn.MouseButton1Click:Connect(function()
 	espAtivo = not espAtivo
 	espBtn.Text = espAtivo and "ESP Box + @: ON" or "ESP Box + @: OFF"
-	espBtn.BackgroundColor3 = espAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	espBtn.BackgroundColor3 = espAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	if not espAtivo then
 		for _, b in pairs(espBoxes) do if b then b:Destroy() end end
 		for _, t in pairs(espTags) do if t then t:Destroy() end end
@@ -1741,7 +1733,7 @@ end)
 espLineBtn.MouseButton1Click:Connect(function()
 	espLineAtivo = not espLineAtivo
 	espLineBtn.Text = espLineAtivo and "ESP Line Players: ON" or "ESP Line Players: OFF"
-	espLineBtn.BackgroundColor3 = espLineAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	espLineBtn.BackgroundColor3 = espLineAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	if not espLineAtivo then
 		for _, line in pairs(espTracerLines) do
 			if line then line.Visible = false end
@@ -1752,7 +1744,7 @@ end)
 infit.MouseButton1Click:Connect(function()
 	infJumpAtivo = not infJumpAtivo
 	infit.Text = infJumpAtivo and "Infit Jump: ON" or "Infit Jump: OFF"
-	infit.BackgroundColor3 = infJumpAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	infit.BackgroundColor3 = infJumpAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 end)
 
 UIS.JumpRequest:Connect(function()
@@ -1764,7 +1756,7 @@ end)
 travarServeBtn.MouseButton1Click:Connect(function()
 	travarServeAtivo = not travarServeAtivo
 	travarServeBtn.Text = travarServeAtivo and "Cuidado vc vai ser lagado☢️: ON" or "Cuidado vc vai ser lagado☢️: OFF"
-	travarServeBtn.BackgroundColor3 = travarServeAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	travarServeBtn.BackgroundColor3 = travarServeAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	if travarServeAtivo then
 		tamanhosOriginaisParts = {}
 		for _, obj in pairs(Workspace:GetDescendants()) do
@@ -1795,7 +1787,7 @@ end)
 transMapBtn.MouseButton1Click:Connect(function()
 	transparenciaAtiva = not transparenciaAtiva
 	transMapBtn.Text = transparenciaAtiva and "Transparência: ON" or "Transparência: OFF"
-	transMapBtn.BackgroundColor3 = transparenciaAtiva and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 0, 0)
+	transMapBtn.BackgroundColor3 = transparenciaAtiva and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 	if transparenciaAtiva then
 		originalTransparencias = {}
 		for _, obj in pairs(Workspace:GetDescendants()) do
@@ -1871,7 +1863,6 @@ RunService.RenderStepped:Connect(function()
 		atualizarESP()
 	end
 	
-	-- LOOP DOS AIMBOTS CORRIGIDO (PAUSA DURANTE TP + TIRO + RETORNO)
 	if not executandoTpTiroRetorno then
 		if aimbotApenasAssassinoAtivo then
 			fovCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
