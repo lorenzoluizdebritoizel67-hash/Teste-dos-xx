@@ -111,7 +111,6 @@ local Pessoas = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 local Camera = Workspace.CurrentCamera
 local Mouse = p:GetMouse()
 
@@ -791,7 +790,7 @@ task.spawn(function()
 	end
 end)
 
--- FUNÇÃO AUXILIAR PARA EQUIPAR ARMA DO XERIFE COM PEQUENO RESPIRO
+-- FUNÇÃO AUXILIAR PARA EQUIPAR ARMA DO XERIFE
 local function obterOuEquiparArma(meuChar, hum)
 	local backpack = p:FindFirstChildOfClass("Backpack")
 	local tool = meuChar:FindFirstChildOfClass("Tool")
@@ -802,29 +801,12 @@ local function obterOuEquiparArma(meuChar, hum)
 		for _, item in pairs(backpack:GetChildren()) do
 			if item:IsA("Tool") and (item.Name == "Gun" or item.Name:lower():find("gun") or item.Name:lower():find("revolver") or item.Name:lower():find("arma")) then
 				hum:EquipTool(item)
-				task.wait(0.12)
+				task.wait(0.15)
 				return meuChar:FindFirstChildOfClass("Tool") or item
 			end
 		end
 	end
 	return tool
-end
-
--- FUNÇÃO PARA FORÇAR O DISPARO DA ARMA (TOOL + CLIQUE NO CENTRO DA TELA)
-local function dispararArmaMM2(tool)
-	if not tool or tool.Parent ~= p.Character then return end
-
-	pcall(function()
-		tool:Activate()
-	end)
-
-	pcall(function()
-		local centroX = Camera.ViewportSize.X / 2
-		local centroY = Camera.ViewportSize.Y / 2
-		VirtualInputManager:SendMouseButtonEvent(centroX, centroY, 0, true, game, 1)
-		task.wait(0.03)
-		VirtualInputManager:SendMouseButtonEvent(centroX, centroY, 0, false, game, 1)
-	end)
 end
 
 local function calcularPontoMiraAssassino(alvoChar, alvoPart)
@@ -846,10 +828,10 @@ local function calcularPontoMiraAssassino(alvoChar, alvoPart)
 	return Vector3.new(posBase.X + leadX, posBase.Y + leadY, posBase.Z + leadZ)
 end
 
--- SISTEMA DE AUTO KILL ASSASSINO (EQUIPA, MIRA NO CENTRO, ATIRA DE VERDADE E VOLTA)
+-- SISTEMA DE AUTO KILL ASSASSINO (CORRIGIDO)
 task.spawn(function()
 	while true do
-		task.wait(0.12)
+		task.wait(0.2)
 		if autoKillAssassinoAtivo and not executandoTpTiroRetorno then
 			pcall(function()
 				local meuChar = p.Character
@@ -876,20 +858,19 @@ task.spawn(function()
 							executandoTpTiroRetorno = true
 
 							local posInicial = hrp.CFrame
-							tool = obterOuEquiparArma(meuChar, hum)
 
-							for tentativa = 1, 3 do
+							for _ = 1, 2 do
 								if not autoKillAssassinoAtivo or alvoHum.Health <= 0 then break end
 								if not p.Character or not p.Character:FindFirstChild("HumanoidRootPart") then break end
 								local humAtual = p.Character:FindFirstChildOfClass("Humanoid")
 								if not humAtual or humAtual.Health <= 0 then break end
 
-								hrp = p.Character.HumanoidRootPart
-								tool = obterOuEquiparArma(p.Character, humAtual)
+								local hrpAtual = p.Character.HumanoidRootPart
+								local armaAtual = obterOuEquiparArma(p.Character, humAtual)
 
 								local pontoMira = calcularPontoMiraAssassino(plr.Character, alvoPart)
 
-								local vetorAteJogador = hrp.Position - pontoMira
+								local vetorAteJogador = hrpAtual.Position - pontoMira
 								if vetorAteJogador.Magnitude < 0.5 then
 									vetorAteJogador = -alvoPart.CFrame.LookVector
 								end
@@ -900,21 +881,22 @@ task.spawn(function()
 									dirSegura = dirSegura.Unit
 								end
 
-								local posTiro = pontoMira + (dirSegura * 7) + Vector3.new(0, 0.5, 0)
+								local posTiro = pontoMira + (dirSegura * 6.5) + Vector3.new(0, 0.5, 0)
 
-								hrp.AssemblyLinearVelocity = Vector3.zero
-								hrp.AssemblyAngularVelocity = Vector3.zero
-								hrp.CFrame = CFrame.lookAt(posTiro, pontoMira)
+								hrpAtual.AssemblyLinearVelocity = Vector3.zero
+								hrpAtual.AssemblyAngularVelocity = Vector3.zero
+								hrpAtual.CFrame = CFrame.lookAt(posTiro, pontoMira)
 								Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, pontoMira)
 
 								RunService.Heartbeat:Wait()
 
-								pontoMira = calcularPontoMiraAssassino(plr.Character, alvoPart)
-								Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, pontoMira)
+								if armaAtual and armaAtual.Parent == p.Character then
+									pcall(function()
+										armaAtual:Activate()
+									end)
+								end
 
-								dispararArmaMM2(tool)
-
-								task.wait(0.08)
+								task.wait(0.15)
 							end
 
 							if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -927,10 +909,10 @@ task.spawn(function()
 								end
 							end
 
-							task.wait(0.3)
+							task.wait(0.4)
 							executandoTpTiroRetorno = false
+							break
 						end
-						break
 					end
 				end
 			end)
