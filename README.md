@@ -808,10 +808,29 @@ local function obterOuEquiparArma(meuChar, hum)
 	return tool
 end
 
--- SISTEMA DE AUTO KILL ASSASSINO (TP LONGE -> ATIRA -> VOLTA ONDE ESTAVA)
+-- SISTEMA DE AUTO KILL ASSASSINO (POSICIONA NA DIREÇÃO CERTA, MIRA E ATIRA)
+local function calcularPontoMiraAssassino(alvoChar, alvoPart)
+	local humAlvo = alvoChar and alvoChar:FindFirstChildOfClass("Humanoid")
+	local vel = alvoPart.AssemblyLinearVelocity
+	local posBase = alvoPart.Position
+
+	local leadX = math.clamp(vel.X * 0.10, -5, 5)
+	local leadZ = math.clamp(vel.Z * 0.10, -5, 5)
+	local leadY = 0
+
+	if humAlvo then
+		local estado = humAlvo:GetState()
+		if estado == Enum.HumanoidStateType.Jumping or estado == Enum.HumanoidStateType.Freefall or math.abs(vel.Y) > 2 then
+			leadY = math.clamp(vel.Y * 0.06, -2, 3)
+		end
+	end
+
+	return Vector3.new(posBase.X + leadX, posBase.Y + leadY, posBase.Z + leadZ)
+end
+
 task.spawn(function()
 	while true do
-		task.wait(0.25)
+		task.wait(0.12)
 		if autoKillAssassinoAtivo and not executandoTpTiroRetorno then
 			pcall(function()
 				local meuChar = p.Character
@@ -819,60 +838,81 @@ task.spawn(function()
 				local hum = meuChar and meuChar:FindFirstChildOfClass("Humanoid")
 				if not hrp or not hum or hum.Health <= 0 then return end
 
-				local meuPapel = detectarPapelMM2(p)
 				local backpack = p:FindFirstChildOfClass("Backpack")
-				local temArma = (meuPapel == "Sheriff")
+				local tool = obterOuEquiparArma(meuChar, hum)
+				local temArma = tool ~= nil
 					or (meuChar:FindFirstChild("Gun") ~= nil)
 					or (backpack and backpack:FindFirstChild("Gun") ~= nil)
 
 				if not temArma then return end
 
 				for _, plr in pairs(Pessoas:GetPlayers()) do
-					if plr ~= p and detectarPapelMM2(plr) == "Murderer" and plr.Character then
+					if plr ~= p and plr.Character then
 						local alvoHum = plr.Character:FindFirstChildOfClass("Humanoid")
 						local alvoPart = plr.Character:FindFirstChild("HumanoidRootPart")
 							or plr.Character:FindFirstChild("UpperTorso")
 							or plr.Character:FindFirstChild("Torso")
 
-						if alvoHum and alvoHum.Health > 0 and alvoPart then
+						if alvoHum and alvoHum.Health > 0 and alvoPart and detectarPapelMM2(plr) == "Murderer" then
 							executandoTpTiroRetorno = true
 
 							local posInicial = hrp.CFrame
-							local tool = obterOuEquiparArma(meuChar, hum)
 
-							local velAlvo = alvoPart.AssemblyLinearVelocity
-							local pontoPrevisto = alvoPart.Position + (velAlvo * 0.14)
-							local direcao = (posInicial.Position - pontoPrevisto)
-							if direcao.Magnitude < 1 then
-								direcao = -alvoPart.CFrame.LookVector
-							end
-							local posLonge = pontoPrevisto + (direcao.Unit * 14) + Vector3.new(0, 1.5, 0)
+							for tentativa = 1, 3 do
+								if not autoKillAssassinoAtivo or alvoHum.Health <= 0 then break end
+								if not p.Character or not p.Character:FindFirstChild("HumanoidRootPart") then break end
+								local humAtual = p.Character:FindFirstChildOfClass("Humanoid")
+								if not humAtual or humAtual.Health <= 0 then break end
 
-							hrp.AssemblyLinearVelocity = Vector3.zero
-							hrp.AssemblyAngularVelocity = Vector3.zero
-							hrp.CFrame = CFrame.lookAt(posLonge, pontoPrevisto)
-							Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, pontoPrevisto)
+								hrp = p.Character.HumanoidRootPart
+								tool = obterOuEquiparArma(p.Character, humAtual)
 
-							if tool and tool.Parent == meuChar then
-								local remoteTiro = tool:FindFirstChildWhichIsA("RemoteEvent", true)
-								if remoteTiro then
+								local pontoMira = calcularPontoMiraAssassino(plr.Character, alvoPart)
+
+								local vetorAteJogador = hrp.Position - pontoMira
+								if vetorAteJogador.Magnitude < 0.5 then
+									vetorAteJogador = -alvoPart.CFrame.LookVector
+								end
+								local dirSegura = Vector3.new(vetorAteJogador.X, 0, vetorAteJogador.Z)
+								if dirSegura.Magnitude < 0.01 then
+									dirSegura = Vector3.new(0, 0, 1)
+								else
+									dirSegura = dirSegura.Unit
+								end
+
+								local distanciaTiro = 7
+								local posTiro = pontoMira + (dirSegura * distanciaTiro) + Vector3.new(0, 0.5, 0)
+
+								hrp.AssemblyLinearVelocity = Vector3.zero
+								hrp.AssemblyAngularVelocity = Vector3.zero
+								hrp.CFrame = CFrame.lookAt(posTiro, pontoMira)
+								Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, pontoMira)
+
+								RunService.Heartbeat:Wait()
+
+								pontoMira = calcularPontoMiraAssassino(plr.Character, alvoPart)
+								Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, pontoMira)
+
+								if tool and tool.Parent == p.Character then
 									pcall(function()
-										remoteTiro:FireServer(pontoPrevisto)
+										tool:Activate()
 									end)
 								end
-								tool:Activate()
-							end
 
-							task.wait(0.18)
+								task.wait(0.07)
+							end
 
 							if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-								local hrpAtual = p.Character.HumanoidRootPart
-								hrpAtual.AssemblyLinearVelocity = Vector3.zero
-								hrpAtual.AssemblyAngularVelocity = Vector3.zero
-								hrpAtual.CFrame = posInicial
+								local humPos = p.Character:FindFirstChildOfClass("Humanoid")
+								if humPos and humPos.Health > 0 then
+									local hrpPos = p.Character.HumanoidRootPart
+									hrpPos.AssemblyLinearVelocity = Vector3.zero
+									hrpPos.AssemblyAngularVelocity = Vector3.zero
+									hrpPos.CFrame = posInicial
+								end
 							end
 
-							task.wait(0.45)
+							task.wait(0.3)
 							executandoTpTiroRetorno = false
 						end
 						break
