@@ -16,7 +16,7 @@ keyFrame.Active = true
 keyFrame.Draggable = true
 
 local cornerKey = Instance.new("UICorner", keyFrame)
-cornerKey.CornerRadius = UDim.new(0, 10)
+cornerKey.CornerRadius = UDim2.new(0, 10)
 
 local strokeKey = Instance.new("UIStroke", keyFrame)
 strokeKey.Color = Color3.fromRGB(255, 0, 0)
@@ -42,7 +42,7 @@ textBoxKey.TextSize = 14
 textBoxKey.Text = ""
 
 local cornerBox = Instance.new("UICorner", textBoxKey)
-cornerBox.CornerRadius = UDim.new(0, 6)
+cornerBox.CornerRadius = UDim2.new(0, 6)
 
 local btnEntrar = Instance.new("TextButton", keyFrame)
 btnEntrar.Size = UDim2.new(0.8, 0, 0, 35)
@@ -54,7 +54,7 @@ btnEntrar.Font = Enum.Font.Code
 btnEntrar.TextSize = 16
 
 local cornerBtn = Instance.new("UICorner", btnEntrar)
-cornerBtn.CornerRadius = UDim.new(0, 6)
+cornerBtn.CornerRadius = UDim2.new(0, 6)
 
 local keyAprovada = false
 
@@ -206,6 +206,7 @@ local aimbotApenasAssassinoAtivo = false
 local mm2AutoFarmAtivo = false
 local autoKillAssassinoAtivo = false
 local autoKillAllMurderAtivo = false
+local executandoTpTiroRetorno = false
 local mm2Boxes = {}
 local mm2Tags = {}
 local mm2TracerLines = {}
@@ -789,77 +790,140 @@ task.spawn(function()
 	end
 end)
 
--- SISTEMA DE AUTO KILL CORRIGIDO COM DUPLO DISPARO E PREVISÃO
+-- FUNÇÃO AUXILIAR PARA EQUIPAR ARMA DO XERIFE
+local function obterOuEquiparArma(meuChar, hum)
+	local backpack = p:FindFirstChildOfClass("Backpack")
+	local tool = meuChar:FindFirstChildOfClass("Tool")
+	if tool and (tool.Name == "Gun" or tool.Name:lower():find("gun") or tool.Name:lower():find("revolver") or tool.Name:lower():find("arma")) then
+		return tool
+	end
+	if backpack then
+		for _, item in pairs(backpack:GetChildren()) do
+			if item:IsA("Tool") and (item.Name == "Gun" or item.Name:lower():find("gun") or item.Name:lower():find("revolver") or item.Name:lower():find("arma")) then
+				hum:EquipTool(item)
+				return item
+			end
+		end
+	end
+	return tool
+end
+
+-- SISTEMA DE AUTO KILL ASSASSINO (TP LONGE -> ATIRA -> VOLTA ONDE ESTAVA)
 task.spawn(function()
 	while true do
-		task.wait(0.08)
-		pcall(function()
-			local meuChar = p.Character
-			local hrp = meuChar and meuChar:FindFirstChild("HumanoidRootPart")
-			local hum = meuChar and meuChar:FindFirstChildOfClass("Humanoid")
-			if not hrp or not hum or hum.Health <= 0 then return end
-			
-			local meuPapel = detectarPapelMM2(p)
-			
-			-- 1. Auto Kill Assassino (Se você for Xerife / tiver a arma)
-			if autoKillAssassinoAtivo and (meuPapel == "Sheriff" or meuChar:FindFirstChild("Gun") or (p:FindFirstChildOfClass("Backpack") and p.Backpack:FindFirstChild("Gun"))) then
+		task.wait(0.25)
+		if autoKillAssassinoAtivo and not executandoTpTiroRetorno then
+			pcall(function()
+				local meuChar = p.Character
+				local hrp = meuChar and meuChar:FindFirstChild("HumanoidRootPart")
+				local hum = meuChar and meuChar:FindFirstChildOfClass("Humanoid")
+				if not hrp or not hum or hum.Health <= 0 then return end
+
+				local meuPapel = detectarPapelMM2(p)
+				local backpack = p:FindFirstChildOfClass("Backpack")
+				local temArma = (meuPapel == "Sheriff")
+					or (meuChar:FindFirstChild("Gun") ~= nil)
+					or (backpack and backpack:FindFirstChild("Gun") ~= nil)
+
+				if not temArma then return end
+
 				for _, plr in pairs(Pessoas:GetPlayers()) do
-					if plr ~= p and detectarPapelMM2(plr) == "Murderer" and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-						local alvoHrp = plr.Character.HumanoidRootPart
-						
-						-- Teleporta colado nas costas do assassino prevendo a velocidade dele
-						local velocidadeAlvo = alvoHrp.AssemblyLinearVelocity
-						hrp.CFrame = (alvoHrp.CFrame + (velocidadeAlvo * 0.05)) * CFrame.new(0, 0, 2)
-						
-						-- Pega a arma na mochila e equipa no personagem se não estiver equipada
-						local tool = meuChar:FindFirstChildOfClass("Tool")
-						if not tool or (tool.Name ~= "Gun" and not tool.Name:lower():find("gun")) then
-							for _, item in pairs(p.Backpack:GetChildren()) do
-								if item:IsA("Tool") and (item.Name == "Gun" or item.Name:lower():find("gun") or item.Name:lower():find("revolver")) then
-									item.Parent = meuChar
-									tool = item
-									break
-								end
+					if plr ~= p and detectarPapelMM2(plr) == "Murderer" and plr.Character then
+						local alvoHum = plr.Character:FindFirstChildOfClass("Humanoid")
+						local alvoPart = plr.Character:FindFirstChild("HumanoidRootPart")
+							or plr.Character:FindFirstChild("UpperTorso")
+							or plr.Character:FindFirstChild("Torso")
+
+						if alvoHum and alvoHum.Health > 0 and alvoPart then
+							executandoTpTiroRetorno = true
+
+							-- 1. Salva o local exato de onde você estava
+							local posInicial = hrp.CFrame
+							local tool = obterOuEquiparArma(meuChar, hum)
+
+							-- 2. Calcula posição segura longe do assassino (~14 studs, fora do alcance da faca)
+							local velAlvo = alvoPart.AssemblyLinearVelocity
+							local pontoPrevisto = alvoPart.Position + (velAlvo * 0.14)
+							local direcao = (posInicial.Position - pontoPrevisto)
+							if direcao.Magnitude < 1 then
+								direcao = -alvoPart.CFrame.LookVector
 							end
-						end
-						
-						-- Trava a câmera perfeitamente no tronco do assassino e dispara a arma com duplo pulso
-						if tool and tool.Parent == meuChar then
-							Camera.CFrame = CFrame.new(Camera.CFrame.Position, alvoHrp.Position)
-							tool:Activate()
-							task.wait(0.02)
-							tool:Activate()
+							local posLonge = pontoPrevisto + (direcao.Unit * 14) + Vector3.new(0, 1.5, 0)
+
+							hrp.AssemblyLinearVelocity = Vector3.zero
+							hrp.AssemblyAngularVelocity = Vector3.zero
+							hrp.CFrame = CFrame.lookAt(posLonge, pontoPrevisto)
+							Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, pontoPrevisto)
+
+							-- 3. Atira no assassino
+							if tool and tool.Parent == meuChar then
+								local remoteTiro = tool:FindFirstChildWhichIsA("RemoteEvent", true)
+								if remoteTiro then
+									pcall(function()
+										remoteTiro:FireServer(pontoPrevisto)
+									end)
+								end
+								tool:Activate()
+							end
+
+							task.wait(0.18)
+
+							-- 4. Teleporta de volta para o local onde você estava
+							if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+								local hrpAtual = p.Character.HumanoidRootPart
+								hrpAtual.AssemblyLinearVelocity = Vector3.zero
+								hrpAtual.AssemblyAngularVelocity = Vector3.zero
+								hrpAtual.CFrame = posInicial
+							end
+
+							task.wait(0.45)
+							executandoTpTiroRetorno = false
 						end
 						break
 					end
 				end
-			end
-			
-			-- 2. Auto Kill All Murder (Se você for o Assassino)
-			if autoKillAllMurderAtivo and meuPapel == "Murderer" then
-				local tool = meuChar:FindFirstChildOfClass("Tool")
-				if not tool then
-					for _, item in pairs(p.Backpack:GetChildren()) do
-						if item:IsA("Tool") and (item.Name:lower():find("knife") or item.Name:lower():find("faca")) then
-							item.Parent = meuChar
-							tool = item
-							break
+			end)
+		end
+	end
+end)
+
+-- SISTEMA DE AUTO KILL ALL MURDER (SE VOCÊ FOR O ASSASSINO)
+task.spawn(function()
+	while true do
+		task.wait(0.04)
+		if autoKillAllMurderAtivo then
+			pcall(function()
+				local meuChar = p.Character
+				local hrp = meuChar and meuChar:FindFirstChild("HumanoidRootPart")
+				local hum = meuChar and meuChar:FindFirstChildOfClass("Humanoid")
+				if not hrp or not hum or hum.Health <= 0 then return end
+
+				local meuPapel = detectarPapelMM2(p)
+				if meuPapel == "Murderer" then
+					local tool = meuChar:FindFirstChildOfClass("Tool")
+					if not tool then
+						for _, item in pairs(p.Backpack:GetChildren()) do
+							if item:IsA("Tool") and (item.Name:lower():find("knife") or item.Name:lower():find("faca")) then
+								item.Parent = meuChar
+								tool = item
+								break
+							end
 						end
 					end
-				end
-				
-				if tool then
-					for _, plr in pairs(Pessoas:GetPlayers()) do
-						if plr ~= p and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-							local alvHrp = plr.Character.HumanoidRootPart
-							alvHrp.CFrame = hrp.CFrame * CFrame.new(0, 0, -2)
-							alvHrp.CanCollide = false
+
+					if tool then
+						for _, plr in pairs(Pessoas:GetPlayers()) do
+							if plr ~= p and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+								local alvHrp = plr.Character.HumanoidRootPart
+								alvHrp.CFrame = hrp.CFrame * CFrame.new(0, 0, -2)
+								alvHrp.CanCollide = false
+							end
 						end
+						tool:Activate()
 					end
-					tool:Activate()
 				end
-			end
-		end)
+			end)
+		end
 	end
 end)
 
@@ -1433,7 +1497,6 @@ local function obterAlvoAssassinoMM2()
 		if plr ~= p and plr.Character and detectarPapelMM2(plr) == "Murderer" then
 			local h = plr.Character:FindFirstChildOfClass("Humanoid")
 			if h and h.Health > 0 then
-				-- Forçado para o Peito/Tronco no MM2
 				local parteAlvoObj = plr.Character:FindFirstChild("HumanoidRootPart") or plr.Character:FindFirstChild("UpperTorso") or plr.Character:FindFirstChild("Torso")
 				if parteAlvoObj then
 					local screenPos, onScreen = Camera:WorldToViewportPoint(parteAlvoObj.Position)
@@ -1808,21 +1871,23 @@ RunService.RenderStepped:Connect(function()
 		atualizarESP()
 	end
 	
-	-- LOOP DOS AIMBOTS CORRIGIDO
-	if aimbotApenasAssassinoAtivo then
-		fovCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-		local alvoParte = obterAlvoAssassinoMM2()
-		if alvoParte then
-			Camera.CFrame = CFrame.new(Camera.CFrame.Position, alvoParte.Position)
+	-- LOOP DOS AIMBOTS CORRIGIDO (PAUSA DURANTE TP + TIRO + RETORNO)
+	if not executandoTpTiroRetorno then
+		if aimbotApenasAssassinoAtivo then
+			fovCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+			local alvoParte = obterAlvoAssassinoMM2()
+			if alvoParte then
+				Camera.CFrame = CFrame.new(Camera.CFrame.Position, alvoParte.Position)
+			end
+		elseif aimbotAtivo then
+			fovCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+			local alvoParte = obterAlvoAimbotGeral()
+			if alvoParte then
+				Camera.CFrame = CFrame.new(Camera.CFrame.Position, alvoParte.Position)
+			end
+		else
+			fovCircle.Visible = false
 		end
-	elseif aimbotAtivo then
-		fovCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-		local alvoParte = obterAlvoAimbotGeral()
-		if alvoParte then
-			Camera.CFrame = CFrame.new(Camera.CFrame.Position, alvoParte.Position)
-		end
-	else
-		fovCircle.Visible = false
 	end
 
 	if espectandoAtivo and jogadorSelecionado and jogadorSelecionado.Character then
