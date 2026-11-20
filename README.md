@@ -111,6 +111,7 @@ local Pessoas = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 local Camera = Workspace.CurrentCamera
 local Mouse = p:GetMouse()
 
@@ -790,7 +791,7 @@ task.spawn(function()
 	end
 end)
 
--- FUNÇÃO AUXILIAR PARA EQUIPAR ARMA DO XERIFE
+-- FUNÇÃO AUXILIAR PARA EQUIPAR ARMA DO XERIFE COM PEQUENO RESPIRO
 local function obterOuEquiparArma(meuChar, hum)
 	local backpack = p:FindFirstChildOfClass("Backpack")
 	local tool = meuChar:FindFirstChildOfClass("Tool")
@@ -801,33 +802,51 @@ local function obterOuEquiparArma(meuChar, hum)
 		for _, item in pairs(backpack:GetChildren()) do
 			if item:IsA("Tool") and (item.Name == "Gun" or item.Name:lower():find("gun") or item.Name:lower():find("revolver") or item.Name:lower():find("arma")) then
 				hum:EquipTool(item)
-				return item
+				task.wait(0.12)
+				return meuChar:FindFirstChildOfClass("Tool") or item
 			end
 		end
 	end
 	return tool
 end
 
--- SISTEMA DE AUTO KILL ASSASSINO (POSICIONA NA DIREÇÃO CERTA, MIRA E ATIRA)
+-- FUNÇÃO PARA FORÇAR O DISPARO DA ARMA (TOOL + CLIQUE NO CENTRO DA TELA)
+local function dispararArmaMM2(tool)
+	if not tool or tool.Parent ~= p.Character then return end
+
+	pcall(function()
+		tool:Activate()
+	end)
+
+	pcall(function()
+		local centroX = Camera.ViewportSize.X / 2
+		local centroY = Camera.ViewportSize.Y / 2
+		VirtualInputManager:SendMouseButtonEvent(centroX, centroY, 0, true, game, 1)
+		task.wait(0.03)
+		VirtualInputManager:SendMouseButtonEvent(centroX, centroY, 0, false, game, 1)
+	end)
+end
+
 local function calcularPontoMiraAssassino(alvoChar, alvoPart)
 	local humAlvo = alvoChar and alvoChar:FindFirstChildOfClass("Humanoid")
 	local vel = alvoPart.AssemblyLinearVelocity
 	local posBase = alvoPart.Position
 
-	local leadX = math.clamp(vel.X * 0.10, -5, 5)
-	local leadZ = math.clamp(vel.Z * 0.10, -5, 5)
+	local leadX = math.clamp(vel.X * 0.08, -4, 4)
+	local leadZ = math.clamp(vel.Z * 0.08, -4, 4)
 	local leadY = 0
 
 	if humAlvo then
 		local estado = humAlvo:GetState()
 		if estado == Enum.HumanoidStateType.Jumping or estado == Enum.HumanoidStateType.Freefall or math.abs(vel.Y) > 2 then
-			leadY = math.clamp(vel.Y * 0.06, -2, 3)
+			leadY = math.clamp(vel.Y * 0.05, -2, 2.5)
 		end
 	end
 
 	return Vector3.new(posBase.X + leadX, posBase.Y + leadY, posBase.Z + leadZ)
 end
 
+-- SISTEMA DE AUTO KILL ASSASSINO (EQUIPA, MIRA NO CENTRO, ATIRA DE VERDADE E VOLTA)
 task.spawn(function()
 	while true do
 		task.wait(0.12)
@@ -857,6 +876,7 @@ task.spawn(function()
 							executandoTpTiroRetorno = true
 
 							local posInicial = hrp.CFrame
+							tool = obterOuEquiparArma(meuChar, hum)
 
 							for tentativa = 1, 3 do
 								if not autoKillAssassinoAtivo or alvoHum.Health <= 0 then break end
@@ -880,8 +900,7 @@ task.spawn(function()
 									dirSegura = dirSegura.Unit
 								end
 
-								local distanciaTiro = 7
-								local posTiro = pontoMira + (dirSegura * distanciaTiro) + Vector3.new(0, 0.5, 0)
+								local posTiro = pontoMira + (dirSegura * 7) + Vector3.new(0, 0.5, 0)
 
 								hrp.AssemblyLinearVelocity = Vector3.zero
 								hrp.AssemblyAngularVelocity = Vector3.zero
@@ -893,13 +912,9 @@ task.spawn(function()
 								pontoMira = calcularPontoMiraAssassino(plr.Character, alvoPart)
 								Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, pontoMira)
 
-								if tool and tool.Parent == p.Character then
-									pcall(function()
-										tool:Activate()
-									end)
-								end
+								dispararArmaMM2(tool)
 
-								task.wait(0.07)
+								task.wait(0.08)
 							end
 
 							if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
