@@ -652,7 +652,7 @@ local espArmaBtn = criarBtn(abaMm2, "ESP da Arma do Xerife: OFF", UDim2.new(0, 0
 local killAllFacaBtn = criarBtn(abaMm2, "Puxar Hitbox p/ Mim (Murder Kill All)", UDim2.new(0, 0, 0, 175))
 local aimbotAssassinoBtn = criarBtn(abaMm2, "Aimbot Apenas no Assassino: OFF", UDim2.new(0, 0, 0, 210))
 local mm2AutoFarmBtn = criarBtn(abaMm2, "Auto Farm: OFF", UDim2.new(0, 0, 0, 245))
-local autoKillAssassinoBtn = criarBtn(abaMm2, "Auto Kill Assassino: OFF", UDim2.new(0, 0, 0, 280))
+local autoKillAssassinoBtn = criarBtn(abaMm2, "Auto Kill Assassino (Tiro Manual): OFF", UDim2.new(0, 0, 0, 280))
 local autoKillAllMurderBtn = criarBtn(abaMm2, "Auto Kill All Murder: OFF", UDim2.new(0, 0, 0, 315))
 
 killAllFacaBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
@@ -709,7 +709,7 @@ end)
 
 autoKillAssassinoBtn.MouseButton1Click:Connect(function()
 	autoKillAssassinoAtivo = not autoKillAssassinoAtivo
-	autoKillAssassinoBtn.Text = autoKillAssassinoAtivo and "Auto Kill Assassino: ON" or "Auto Kill Assassino: OFF"
+	autoKillAssassinoBtn.Text = autoKillAssassinoAtivo and "Auto Kill Assassino (Tiro Manual): ON" or "Auto Kill Assassino (Tiro Manual): OFF"
 	autoKillAssassinoBtn.BackgroundColor3 = autoKillAssassinoAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 end)
 
@@ -828,10 +828,10 @@ local function calcularPontoMiraAssassino(alvoChar, alvoPart)
 	return Vector3.new(posBase.X + leadX, posBase.Y + leadY, posBase.Z + leadZ)
 end
 
--- SISTEMA DE AUTO KILL ASSASSINO (CORRIGIDO)
+-- SISTEMA DE AUTO KILL ASSASSINO (EQUIPA, POSICIONA E ALINHA PARA TIRO MANUAL)
 task.spawn(function()
 	while true do
-		task.wait(0.2)
+		task.wait(0.25)
 		if autoKillAssassinoAtivo and not executandoTpTiroRetorno then
 			pcall(function()
 				local meuChar = p.Character
@@ -858,46 +858,27 @@ task.spawn(function()
 							executandoTpTiroRetorno = true
 
 							local posInicial = hrp.CFrame
+							local pontoMira = calcularPontoMiraAssassino(plr.Character, alvoPart)
 
-							for _ = 1, 2 do
-								if not autoKillAssassinoAtivo or alvoHum.Health <= 0 then break end
-								if not p.Character or not p.Character:FindFirstChild("HumanoidRootPart") then break end
-								local humAtual = p.Character:FindFirstChildOfClass("Humanoid")
-								if not humAtual or humAtual.Health <= 0 then break end
-
-								local hrpAtual = p.Character.HumanoidRootPart
-								local armaAtual = obterOuEquiparArma(p.Character, humAtual)
-
-								local pontoMira = calcularPontoMiraAssassino(plr.Character, alvoPart)
-
-								local vetorAteJogador = hrpAtual.Position - pontoMira
-								if vetorAteJogador.Magnitude < 0.5 then
-									vetorAteJogador = -alvoPart.CFrame.LookVector
-								end
-								local dirSegura = Vector3.new(vetorAteJogador.X, 0, vetorAteJogador.Z)
-								if dirSegura.Magnitude < 0.01 then
-									dirSegura = Vector3.new(0, 0, 1)
-								else
-									dirSegura = dirSegura.Unit
-								end
-
-								local posTiro = pontoMira + (dirSegura * 6.5) + Vector3.new(0, 0.5, 0)
-
-								hrpAtual.AssemblyLinearVelocity = Vector3.zero
-								hrpAtual.AssemblyAngularVelocity = Vector3.zero
-								hrpAtual.CFrame = CFrame.lookAt(posTiro, pontoMira)
-								Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, pontoMira)
-
-								RunService.Heartbeat:Wait()
-
-								if armaAtual and armaAtual.Parent == p.Character then
-									pcall(function()
-										armaAtual:Activate()
-									end)
-								end
-
-								task.wait(0.15)
+							local vetorAteJogador = hrp.Position - pontoMira
+							if vetorAteJogador.Magnitude < 0.5 then
+								vetorAteJogador = -alvoPart.CFrame.LookVector
 							end
+							local dirSegura = Vector3.new(vetorAteJogador.X, 0, vetorAteJogador.Z)
+							if dirSegura.Magnitude < 0.01 then
+								dirSegura = Vector3.new(0, 0, 1)
+							else
+								dirSegura = dirSegura.Unit
+							end
+
+							local posTiro = pontoMira + (dirSegura * 6.5) + Vector3.new(0, 0.5, 0)
+
+							hrp.AssemblyLinearVelocity = Vector3.zero
+							hrp.AssemblyAngularVelocity = Vector3.zero
+							hrp.CFrame = CFrame.lookAt(posTiro, pontoMira)
+							Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, pontoMira)
+
+							task.wait(0.35)
 
 							if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
 								local humPos = p.Character:FindFirstChildOfClass("Humanoid")
@@ -909,7 +890,7 @@ task.spawn(function()
 								end
 							end
 
-							task.wait(0.4)
+							task.wait(0.5)
 							executandoTpTiroRetorno = false
 							break
 						end
