@@ -84,7 +84,8 @@ fundoPreto.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 fundoPreto.BorderSizePixel = 0
 
 local textoIntro = Instance.new("TextLabel", fundoPreto)
-textoIntro.Size = UDim2.new(1, 0, 1, 0)
+textoIntro.Size = UDim2.new(1, 0, 0.25, 0)
+textoIntro.Position = UDim2.new(0, 0, 0.35, 0)
 textoIntro.BackgroundTransparency = 1
 textoIntro.Text = "Lorenzo Hub"
 textoIntro.TextColor3 = Color3.fromRGB(255, 0, 0)
@@ -96,11 +97,21 @@ local constraintIntro = Instance.new("UITextSizeConstraint", textoIntro)
 constraintIntro.MaxTextSize = 80
 constraintIntro.MinTextSize = 24
 
+local textoVersao = Instance.new("TextLabel", fundoPreto)
+textoVersao.Size = UDim2.new(1, 0, 0.1, 0)
+textoVersao.Position = UDim2.new(0, 0, 0.58, 0)
+textoVersao.BackgroundTransparency = 1
+textoVersao.Text = "Versão: v67"
+textoVersao.TextColor3 = Color3.fromRGB(200, 200, 200)
+textoVersao.TextSize = 24
+textoVersao.Font = Enum.Font.Code
+
 task.wait(1.8)
 
 for i = 0, 1, 0.08 do
 	fundoPreto.BackgroundTransparency = i
 	textoIntro.TextTransparency = i
+	textoVersao.TextTransparency = i
 	task.wait(0.03)
 end
 
@@ -373,7 +384,7 @@ fovCircle.Transparency = 0.7
 fovCircle.Thickness = 2
 fovCircle.Color = Color3.fromRGB(255, 0, 0)
 fovCircle.Filled = false
-fovCircle.Radius = 100
+fovCircle.Radius = 150
 fovCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
 -- ==================== JANELA PRINCIPAL ====================
@@ -397,7 +408,7 @@ strokeMain.Color = Color3.fromRGB(255, 0, 0)
 local titulo = Instance.new("TextLabel", f)
 titulo.Size = UDim2.new(1, -40, 0, 30)
 titulo.Position = UDim2.new(0, 10, 0, 5)
-titulo.Text = "Lorenzo Hub"
+titulo.Text = "Lorenzo Hub v67"
 titulo.Font = Enum.Font.Code
 titulo.TextSize = 16
 titulo.TextColor3 = Color3.fromRGB(255, 0, 0)
@@ -652,7 +663,7 @@ local espArmaBtn = criarBtn(abaMm2, "ESP da Arma do Xerife: OFF", UDim2.new(0, 0
 local killAllFacaBtn = criarBtn(abaMm2, "Puxar Hitbox p/ Mim (Murder Kill All)", UDim2.new(0, 0, 0, 175))
 local aimbotAssassinoBtn = criarBtn(abaMm2, "Aimbot Apenas no Assassino: OFF", UDim2.new(0, 0, 0, 210))
 local mm2AutoFarmBtn = criarBtn(abaMm2, "Auto Farm: OFF", UDim2.new(0, 0, 0, 245))
-local autoKillAssassinoBtn = criarBtn(abaMm2, "Auto Kill Assassino (Tiro Manual): OFF", UDim2.new(0, 0, 0, 280))
+local autoKillAssassinoBtn = criarBtn(abaMm2, "Auto Kill Assassino: OFF", UDim2.new(0, 0, 0, 280))
 local autoKillAllMurderBtn = criarBtn(abaMm2, "Auto Kill All Murder: OFF", UDim2.new(0, 0, 0, 315))
 
 killAllFacaBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
@@ -709,7 +720,7 @@ end)
 
 autoKillAssassinoBtn.MouseButton1Click:Connect(function()
 	autoKillAssassinoAtivo = not autoKillAssassinoAtivo
-	autoKillAssassinoBtn.Text = autoKillAssassinoAtivo and "Auto Kill Assassino (Tiro Manual): ON" or "Auto Kill Assassino (Tiro Manual): OFF"
+	autoKillAssassinoBtn.Text = autoKillAssassinoAtivo and "Auto Kill Assassino: ON" or "Auto Kill Assassino: OFF"
 	autoKillAssassinoBtn.BackgroundColor3 = autoKillAssassinoAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 end)
 
@@ -801,7 +812,7 @@ local function obterOuEquiparArma(meuChar, hum)
 		for _, item in pairs(backpack:GetChildren()) do
 			if item:IsA("Tool") and (item.Name == "Gun" or item.Name:lower():find("gun") or item.Name:lower():find("revolver") or item.Name:lower():find("arma")) then
 				hum:EquipTool(item)
-				task.wait(0.15)
+				task.wait(0.1)
 				return meuChar:FindFirstChildOfClass("Tool") or item
 			end
 		end
@@ -828,75 +839,56 @@ local function calcularPontoMiraAssassino(alvoChar, alvoPart)
 	return Vector3.new(posBase.X + leadX, posBase.Y + leadY, posBase.Z + leadZ)
 end
 
--- SISTEMA DE AUTO KILL ASSASSINO (EQUIPA, POSICIONA E ALINHA PARA TIRO MANUAL)
+-- ==================== AUTO KILL ASSASSINO (AÇÃO ÚNICA) ====================
+local function buscarAssassinoVivo()
+	for _, plr in pairs(Pessoas:GetPlayers()) do
+		if plr ~= p and plr.Character and detectarPapelMM2(plr) == "Murderer" then
+			local alvoHum = plr.Character:FindFirstChildOfClass("Humanoid")
+			local alvoPart = plr.Character:FindFirstChild("HumanoidRootPart")
+				or plr.Character:FindFirstChild("UpperTorso")
+				or plr.Character:FindFirstChild("Torso")
+			if alvoHum and alvoHum.Health > 0 and alvoPart then
+				return plr, alvoHum, alvoPart
+			end
+		end
+	end
+	return nil, nil, nil
+end
+
 task.spawn(function()
 	while true do
-		task.wait(0.25)
-		if autoKillAssassinoAtivo and not executandoTpTiroRetorno then
+		task.wait(0.05)
+		if autoKillAssassinoAtivo then
 			pcall(function()
 				local meuChar = p.Character
 				local hrp = meuChar and meuChar:FindFirstChild("HumanoidRootPart")
 				local hum = meuChar and meuChar:FindFirstChildOfClass("Humanoid")
 				if not hrp or not hum or hum.Health <= 0 then return end
 
-				local backpack = p:FindFirstChildOfClass("Backpack")
-				local tool = obterOuEquiparArma(meuChar, hum)
-				local temArma = tool ~= nil
-					or (meuChar:FindFirstChild("Gun") ~= nil)
-					or (backpack and backpack:FindFirstChild("Gun") ~= nil)
+				local alvoPlr, alvoHum, alvoPart = buscarAssassinoVivo()
+				if not alvoPart then
+					executandoTpTiroRetorno = false
+					return
+				end
 
-				if not temArma then return end
+				executandoTpTiroRetorno = true
+				local armaAtual = obterOuEquiparArma(meuChar, hum)
+				local pontoMira = calcularPontoMiraAssassino(alvoPlr.Character, alvoPart)
 
-				for _, plr in pairs(Pessoas:GetPlayers()) do
-					if plr ~= p and plr.Character then
-						local alvoHum = plr.Character:FindFirstChildOfClass("Humanoid")
-						local alvoPart = plr.Character:FindFirstChild("HumanoidRootPart")
-							or plr.Character:FindFirstChild("UpperTorso")
-							or plr.Character:FindFirstChild("Torso")
+				local posTiro = pontoMira - (alvoPart.CFrame.LookVector * 5) + Vector3.new(0, 0.5, 0)
+				hrp.AssemblyLinearVelocity = Vector3.zero
+				hrp.AssemblyAngularVelocity = Vector3.zero
+				hrp.CFrame = CFrame.lookAt(posTiro, pontoMira)
+				Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, pontoMira)
 
-						if alvoHum and alvoHum.Health > 0 and alvoPart and detectarPapelMM2(plr) == "Murderer" then
-							executandoTpTiroRetorno = true
-
-							local posInicial = hrp.CFrame
-							local pontoMira = calcularPontoMiraAssassino(plr.Character, alvoPart)
-
-							local vetorAteJogador = hrp.Position - pontoMira
-							if vetorAteJogador.Magnitude < 0.5 then
-								vetorAteJogador = -alvoPart.CFrame.LookVector
-							end
-							local dirSegura = Vector3.new(vetorAteJogador.X, 0, vetorAteJogador.Z)
-							if dirSegura.Magnitude < 0.01 then
-								dirSegura = Vector3.new(0, 0, 1)
-							else
-								dirSegura = dirSegura.Unit
-							end
-
-							local posTiro = pontoMira + (dirSegura * 6.5) + Vector3.new(0, 0.5, 0)
-
-							hrp.AssemblyLinearVelocity = Vector3.zero
-							hrp.AssemblyAngularVelocity = Vector3.zero
-							hrp.CFrame = CFrame.lookAt(posTiro, pontoMira)
-							Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, pontoMira)
-
-							task.wait(0.35)
-
-							if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-								local humPos = p.Character:FindFirstChildOfClass("Humanoid")
-								if humPos and humPos.Health > 0 then
-									local hrpPos = p.Character.HumanoidRootPart
-									hrpPos.AssemblyLinearVelocity = Vector3.zero
-									hrpPos.AssemblyAngularVelocity = Vector3.zero
-									hrpPos.CFrame = posInicial
-								end
-							end
-
-							task.wait(0.5)
-							executandoTpTiroRetorno = false
-							break
-						end
-					end
+				if armaAtual and armaAtual.Parent == meuChar then
+					pcall(function()
+						armaAtual:Activate()
+					end)
 				end
 			end)
+		else
+			executandoTpTiroRetorno = false
 		end
 	end
 end)
