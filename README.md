@@ -101,7 +101,7 @@ local textoVersao = Instance.new("TextLabel", fundoPreto)
 textoVersao.Size = UDim2.new(1, 0, 0.1, 0)
 textoVersao.Position = UDim2.new(0, 0, 0.58, 0)
 textoVersao.BackgroundTransparency = 1
-textoVersao.Text = "Versão: v68"
+textoVersao.Text = "Versão: v69"
 textoVersao.TextColor3 = Color3.fromRGB(200, 200, 200)
 textoVersao.TextSize = 24
 textoVersao.Font = Enum.Font.Code
@@ -408,7 +408,7 @@ strokeMain.Color = Color3.fromRGB(255, 0, 0)
 local titulo = Instance.new("TextLabel", f)
 titulo.Size = UDim2.new(1, -40, 0, 30)
 titulo.Position = UDim2.new(0, 10, 0, 5)
-titulo.Text = "Lorenzo Hub v68"
+titulo.Text = "Lorenzo Hub v69"
 titulo.Font = Enum.Font.Code
 titulo.TextSize = 16
 titulo.TextColor3 = Color3.fromRGB(255, 0, 0)
@@ -730,66 +730,51 @@ autoKillAllMurderBtn.MouseButton1Click:Connect(function()
 	autoKillAllMurderBtn.BackgroundColor3 = autoKillAllMurderAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
 end)
 
--- SISTEMA DE AUTO FARM
+-- SISTEMA DE AUTO FARM (SEM PUXAR DE VOLTA QUANDO MORTO)
 task.spawn(function()
 	while true do
-		task.wait(0.03)
+		task.wait(0.05)
 		if mm2AutoFarmAtivo then
 			pcall(function()
 				local char = p.Character
 				local hrp = char and char:FindFirstChild("HumanoidRootPart")
 				local hum = char and char:FindFirstChildOfClass("Humanoid")
 				
-				if hrp and hum and hum.Health > 0 then
-					for _, part in pairs(char:GetDescendants()) do
-						if part:IsA("BasePart") then part.CanCollide = false end
-					end
-					
-					local bag = p.PlayerGui:FindFirstChild("MainGUI") and p.PlayerGui.MainGUI:FindFirstChild("Game") and p.PlayerGui.MainGUI.Game:FindFirstChild("CoinBag")
-					local bagCheia = false
-					if bag and bag.Visible and bag.Text then
-						if bag.Text:find("10/10") or bag.Text:find("15/15") or bag.Text:find("Full") or bag.Text:find("Cheio") then
-							bagCheia = true
+				if not char or not hrp or not hum or hum.Health <= 0 then
+					return
+				end
+
+				for _, part in pairs(char:GetDescendants()) do
+					if part:IsA("BasePart") then part.CanCollide = false end
+				end
+
+				local moedaAlvo = nil
+				local menorDistancia = math.huge
+
+				for _, obj in pairs(Workspace:GetDescendants()) do
+					if obj:IsA("BasePart") and (obj.Name == "Coin" or obj.Name == "CoinVisual" or obj.Name == "Drop") then
+						local dist = (hrp.Position - obj.Position).Magnitude
+						if dist < menorDistancia then
+							menorDistancia = dist
+							moedaAlvo = obj
 						end
 					end
-					
-					if bagCheia then
-						hum.Health = 0
-						task.wait(4)
+				end
+
+				if moedaAlvo and moedaAlvo.Parent and hum.Health > 0 then
+					hum.PlatformStand = true
+					local destino = moedaAlvo.Position
+					local distanciaAtual = (hrp.Position - destino).Magnitude
+
+					if distanciaAtual > 1.5 then
+						hrp.CFrame = hrp.CFrame:Lerp(CFrame.new(destino), 0.25)
 					else
-						local moedaAlvo = nil
-						local menorDistancia = math.huge
-						
-						for _, obj in pairs(Workspace:GetDescendants()) do
-							if obj:IsA("BasePart") and (obj.Name == "Coin" or obj.Name == "CoinVisual" or obj.Name == "Drop") then
-								local dist = (hrp.Position - obj.Position).Magnitude
-								if dist < menorDistancia then
-									menorDistancia = dist
-									moedaAlvo = obj
-								end
-							end
-						end
-						
-						if moedaAlvo and moedaAlvo.Parent then
-							hum.PlatformStand = true
-							local destino = moedaAlvo.Position
-							local distanciaAtual = (hrp.Position - destino).Magnitude
-							
-							if distanciaAtual > 1.5 then
-								hrp.CFrame = hrp.CFrame:Lerp(CFrame.new(destino), 0.2)
-								hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-								hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-							else
-								hrp.CFrame = CFrame.new(destino)
-								hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-								hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-							end
-						else
-							hum.PlatformStand = false
-						end
+						hrp.CFrame = CFrame.new(destino)
 					end
+					hrp.AssemblyLinearVelocity = Vector3.zero
+					hrp.AssemblyAngularVelocity = Vector3.zero
 				else
-					pcall(function() if hum then hum.PlatformStand = false end end)
+					hum.PlatformStand = false
 				end
 			end)
 		else
@@ -818,7 +803,7 @@ local function obterOuEquiparArma(meuChar, hum)
 		for _, item in pairs(backpack:GetChildren()) do
 			if ehArmaXerife(item) then
 				hum:EquipTool(item)
-				task.wait(0.1)
+				task.wait(0.08)
 				return meuChar:FindFirstChildOfClass("Tool") or item
 			end
 		end
@@ -831,21 +816,22 @@ local function calcularPontoMiraAssassino(alvoChar, alvoPart)
 	local vel = alvoPart.AssemblyLinearVelocity
 	local posBase = alvoPart.Position
 
-	local leadX = math.clamp(vel.X * 0.08, -4, 4)
-	local leadZ = math.clamp(vel.Z * 0.08, -4, 4)
+	-- Antecipação maior para assassino correndo ou pulando
+	local leadX = math.clamp(vel.X * 0.14, -7, 7)
+	local leadZ = math.clamp(vel.Z * 0.14, -7, 7)
 	local leadY = 0
 
 	if humAlvo then
 		local estado = humAlvo:GetState()
-		if estado == Enum.HumanoidStateType.Jumping or estado == Enum.HumanoidStateType.Freefall or math.abs(vel.Y) > 2 then
-			leadY = math.clamp(vel.Y * 0.05, -2, 2.5)
+		if estado == Enum.HumanoidStateType.Jumping or estado == Enum.HumanoidStateType.Freefall or math.abs(vel.Y) > 1.5 then
+			leadY = math.clamp(vel.Y * 0.1, -3.5, 4)
 		end
 	end
 
 	return Vector3.new(posBase.X + leadX, posBase.Y + leadY, posBase.Z + leadZ)
 end
 
--- ==================== AUTO KILL ASSASSINO (EXIGE ARMA DO XERIFE) ====================
+-- ==================== AUTO KILL ASSASSINO (EXIGE ARMA DO XERIFE + MIRA EM MOVIMENTO) ====================
 local function buscarAssassinoVivo()
 	for _, plr in pairs(Pessoas:GetPlayers()) do
 		if plr ~= p and plr.Character and detectarPapelMM2(plr) == "Murderer" then
@@ -863,7 +849,7 @@ end
 
 task.spawn(function()
 	while true do
-		task.wait(0.05)
+		task.wait(0.03)
 		if autoKillAssassinoAtivo then
 			pcall(function()
 				local meuChar = p.Character
@@ -874,7 +860,6 @@ task.spawn(function()
 					return
 				end
 
-				-- Só teleporta se o jogador tiver a arma do xerife (não sendo Inocente sem arma)
 				local armaAtual = obterOuEquiparArma(meuChar, hum)
 				if not armaAtual then
 					executandoTpTiroRetorno = false
@@ -889,8 +874,13 @@ task.spawn(function()
 
 				executandoTpTiroRetorno = true
 				local pontoMira = calcularPontoMiraAssassino(alvoPlr.Character, alvoPart)
+				local velAlvo = alvoPart.AssemblyLinearVelocity
+				local dirMov = Vector3.new(velAlvo.X, 0, velAlvo.Z)
 
-				local posTiro = pontoMira - (alvoPart.CFrame.LookVector * 5) + Vector3.new(0, 0.5, 0)
+				-- Posiciona ligeiramente à frente/atrás da trajetória para reduzir erro com assassino correndo
+				local deslocamento = dirMov.Magnitude > 1 and (-dirMov.Unit * 3.5) or (-alvoPart.CFrame.LookVector * 3.5)
+				local posTiro = pontoMira + deslocamento + Vector3.new(0, 0.35, 0)
+
 				hrp.AssemblyLinearVelocity = Vector3.zero
 				hrp.AssemblyAngularVelocity = Vector3.zero
 				hrp.CFrame = CFrame.lookAt(posTiro, pontoMira)
