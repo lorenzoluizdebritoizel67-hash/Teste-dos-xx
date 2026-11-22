@@ -802,22 +802,28 @@ task.spawn(function()
 end)
 
 -- FUNÇÃO AUXILIAR PARA EQUIPAR ARMA DO XERIFE
+local function ehArmaXerife(tool)
+	if not tool or not tool:IsA("Tool") then return false end
+	local nome = tool.Name:lower()
+	return tool.Name == "Gun" or nome:find("gun") or nome:find("revolver") or nome:find("arma")
+end
+
 local function obterOuEquiparArma(meuChar, hum)
 	local backpack = p:FindFirstChildOfClass("Backpack")
 	local tool = meuChar:FindFirstChildOfClass("Tool")
-	if tool and (tool.Name == "Gun" or tool.Name:lower():find("gun") or tool.Name:lower():find("revolver") or tool.Name:lower():find("arma")) then
+	if ehArmaXerife(tool) then
 		return tool
 	end
 	if backpack then
 		for _, item in pairs(backpack:GetChildren()) do
-			if item:IsA("Tool") and (item.Name == "Gun" or item.Name:lower():find("gun") or item.Name:lower():find("revolver") or item.Name:lower():find("arma")) then
+			if ehArmaXerife(item) then
 				hum:EquipTool(item)
 				task.wait(0.1)
 				return meuChar:FindFirstChildOfClass("Tool") or item
 			end
 		end
 	end
-	return tool
+	return nil
 end
 
 local function calcularPontoMiraAssassino(alvoChar, alvoPart)
@@ -839,7 +845,7 @@ local function calcularPontoMiraAssassino(alvoChar, alvoPart)
 	return Vector3.new(posBase.X + leadX, posBase.Y + leadY, posBase.Z + leadZ)
 end
 
--- ==================== AUTO KILL ASSASSINO (AÇÃO ÚNICA) ====================
+-- ==================== AUTO KILL ASSASSINO (EXIGE ARMA DO XERIFE) ====================
 local function buscarAssassinoVivo()
 	for _, plr in pairs(Pessoas:GetPlayers()) do
 		if plr ~= p and plr.Character and detectarPapelMM2(plr) == "Murderer" then
@@ -863,7 +869,17 @@ task.spawn(function()
 				local meuChar = p.Character
 				local hrp = meuChar and meuChar:FindFirstChild("HumanoidRootPart")
 				local hum = meuChar and meuChar:FindFirstChildOfClass("Humanoid")
-				if not hrp or not hum or hum.Health <= 0 then return end
+				if not hrp or not hum or hum.Health <= 0 then
+					executandoTpTiroRetorno = false
+					return
+				end
+
+				-- Só teleporta se o jogador tiver a arma do xerife (não sendo Inocente sem arma)
+				local armaAtual = obterOuEquiparArma(meuChar, hum)
+				if not armaAtual then
+					executandoTpTiroRetorno = false
+					return
+				end
 
 				local alvoPlr, alvoHum, alvoPart = buscarAssassinoVivo()
 				if not alvoPart then
@@ -872,7 +888,6 @@ task.spawn(function()
 				end
 
 				executandoTpTiroRetorno = true
-				local armaAtual = obterOuEquiparArma(meuChar, hum)
 				local pontoMira = calcularPontoMiraAssassino(alvoPlr.Character, alvoPart)
 
 				local posTiro = pontoMira - (alvoPart.CFrame.LookVector * 5) + Vector3.new(0, 0.5, 0)
@@ -881,7 +896,7 @@ task.spawn(function()
 				hrp.CFrame = CFrame.lookAt(posTiro, pontoMira)
 				Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, pontoMira)
 
-				if armaAtual and armaAtual.Parent == meuChar then
+				if armaAtual.Parent == meuChar then
 					pcall(function()
 						armaAtual:Activate()
 					end)
