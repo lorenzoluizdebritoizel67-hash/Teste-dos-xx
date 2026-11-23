@@ -101,7 +101,7 @@ local textoVersao = Instance.new("TextLabel", fundoPreto)
 textoVersao.Size = UDim2.new(1, 0, 0.1, 0)
 textoVersao.Position = UDim2.new(0, 0, 0.58, 0)
 textoVersao.BackgroundTransparency = 1
-textoVersao.Text = "Versão: v69"
+textoVersao.Text = "Versão: v70"
 textoVersao.TextColor3 = Color3.fromRGB(200, 200, 200)
 textoVersao.TextSize = 24
 textoVersao.Font = Enum.Font.Code
@@ -243,6 +243,7 @@ local jogadorSelecionado = nil
 local coordenadasMarcadas = nil
 local posicaoInicioRetorno = nil
 local estadoCicloTp = 1
+local COORDENADA_LOBBY = Vector3.new(14.1, 516.4, -25.1)
 
 -- ESP DA ARMA DO XERIFE CORRIGIDO
 local mm2EspArmaAtivo = false
@@ -408,7 +409,7 @@ strokeMain.Color = Color3.fromRGB(255, 0, 0)
 local titulo = Instance.new("TextLabel", f)
 titulo.Size = UDim2.new(1, -40, 0, 30)
 titulo.Position = UDim2.new(0, 10, 0, 5)
-titulo.Text = "Lorenzo Hub v69"
+titulo.Text = "Lorenzo Hub v70"
 titulo.Font = Enum.Font.Code
 titulo.TextSize = 16
 titulo.TextColor3 = Color3.fromRGB(255, 0, 0)
@@ -613,6 +614,7 @@ end
 -- ==================== ABA COISAS LEGAIS 👍💪 ====================
 local tpMarcaLocalBtn = criarBtn(abaInuteis, "Marca local de tp", UDim2.new(0, 0, 0, 0))
 local tpEscolhidoBtn = criarBtn(abaInuteis, "TP até local escolhido", UDim2.new(0, 0, 0, 35))
+local tpLobbyBtn = criarBtn(abaInuteis, "TP até lobby", UDim2.new(0, 0, 0, 70))
 
 tpMarcaLocalBtn.MouseButton1Click:Connect(function()
 	local hrp = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
@@ -651,6 +653,15 @@ tpEscolhidoBtn.MouseButton1Click:Connect(function()
 			tpEscolhidoBtn.Text = "Voltar a local de início"
 			estadoCicloTp = 2
 		end
+	end
+end)
+
+tpLobbyBtn.MouseButton1Click:Connect(function()
+	local hrp = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+	if hrp then
+		hrp.AssemblyLinearVelocity = Vector3.zero
+		hrp.AssemblyAngularVelocity = Vector3.zero
+		hrp.CFrame = CFrame.new(COORDENADA_LOBBY)
 	end
 end)
 
@@ -816,7 +827,6 @@ local function calcularPontoMiraAssassino(alvoChar, alvoPart)
 	local vel = alvoPart.AssemblyLinearVelocity
 	local posBase = alvoPart.Position
 
-	-- Antecipação maior para assassino correndo ou pulando
 	local leadX = math.clamp(vel.X * 0.14, -7, 7)
 	local leadZ = math.clamp(vel.Z * 0.14, -7, 7)
 	local leadY = 0
@@ -877,7 +887,6 @@ task.spawn(function()
 				local velAlvo = alvoPart.AssemblyLinearVelocity
 				local dirMov = Vector3.new(velAlvo.X, 0, velAlvo.Z)
 
-				-- Posiciona ligeiramente à frente/atrás da trajetória para reduzir erro com assassino correndo
 				local deslocamento = dirMov.Magnitude > 1 and (-dirMov.Unit * 3.5) or (-alvoPart.CFrame.LookVector * 3.5)
 				local posTiro = pontoMira + deslocamento + Vector3.new(0, 0.35, 0)
 
