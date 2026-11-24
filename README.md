@@ -87,7 +87,7 @@ local textoIntro = Instance.new("TextLabel", fundoPreto)
 textoIntro.Size = UDim2.new(1, 0, 0.25, 0)
 textoIntro.Position = UDim2.new(0, 0, 0.35, 0)
 textoIntro.BackgroundTransparency = 1
-textoIntro.Text = "Lorenzo Hub"
+textoIntro.Text = "xX_Xx Hub"
 textoIntro.TextColor3 = Color3.fromRGB(255, 0, 0)
 textoIntro.TextSize = 60
 textoIntro.TextScaled = true
@@ -101,7 +101,7 @@ local textoVersao = Instance.new("TextLabel", fundoPreto)
 textoVersao.Size = UDim2.new(1, 0, 0.1, 0)
 textoVersao.Position = UDim2.new(0, 0, 0.58, 0)
 textoVersao.BackgroundTransparency = 1
-textoVersao.Text = "Versão: v71"
+textoVersao.Text = "Versão: v75"
 textoVersao.TextColor3 = Color3.fromRGB(200, 200, 200)
 textoVersao.TextSize = 24
 textoVersao.Font = Enum.Font.Code
@@ -214,7 +214,9 @@ local conexaoWalkFling = nil
 local teclaAtalho = nil
 local aguardandoTecla = false
 local temaAtual = "padrao"
+local painelIniciarFechado = true
 local caveiraVisivelAtiva = true
+local hstBotaoRemovido = false
 
 -- MM2 ESP & RECURSOS
 local mm2AssassinoAtivo = false
@@ -397,7 +399,7 @@ f.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 f.BorderSizePixel = 0
 f.Active = true
 f.Draggable = true
-f.Visible = true
+f.Visible = not painelIniciarFechado
 f.ZIndex = 2
 addCorner(f, 12)
 
@@ -409,7 +411,7 @@ strokeMain.Color = Color3.fromRGB(255, 0, 0)
 local titulo = Instance.new("TextLabel", f)
 titulo.Size = UDim2.new(1, -40, 0, 30)
 titulo.Position = UDim2.new(0, 10, 0, 5)
-titulo.Text = "Lorenzo Hub v71"
+titulo.Text = "xX_Xx Hub v75"
 titulo.Font = Enum.Font.Code
 titulo.TextSize = 16
 titulo.TextColor3 = Color3.fromRGB(255, 0, 0)
@@ -458,7 +460,7 @@ local abaInuteis = criarAreaConteudo()
 abaInuteis.CanvasSize = UDim2.new(0, 0, 0, 300)
 
 local abaConfig = criarAreaConteudo()
-abaConfig.CanvasSize = UDim2.new(0, 0, 0, 560)
+abaConfig.CanvasSize = UDim2.new(0, 0, 0, 620)
 
 -- ==================== PAINEL DAS ABAS ====================
 local sidebar = Instance.new("Frame", f)
@@ -545,7 +547,7 @@ local function criarBtn(parent, txt, pos, size)
 	return b
 end
 
--- ==================== BOTÃO DA CAVEIRA ====================
+-- ==================== BOTÃO DA CAVEIRA (HST) ====================
 local titleButton = Instance.new("ImageButton", gui)
 titleButton.Name = "ImageButtonHST"
 titleButton.Position = UDim2.new(0.5, -40, 0, 5)
@@ -814,7 +816,7 @@ local function obterOuEquiparArma(meuChar, hum)
 		for _, item in pairs(backpack:GetChildren()) do
 			if ehArmaXerife(item) then
 				hum:EquipTool(item)
-				task.wait(0.08)
+				task.wait(0.06)
 				return meuChar:FindFirstChildOfClass("Tool") or item
 			end
 		end
@@ -823,25 +825,18 @@ local function obterOuEquiparArma(meuChar, hum)
 end
 
 local function calcularPontoMiraAssassino(alvoChar, alvoPart)
-	local humAlvo = alvoChar and alvoChar:FindFirstChildOfClass("Humanoid")
+	local tronco = alvoChar and (alvoChar:FindFirstChild("UpperTorso") or alvoChar:FindFirstChild("Torso") or alvoPart)
+	local posBase = tronco.Position
 	local vel = alvoPart.AssemblyLinearVelocity
-	local posBase = alvoPart.Position
 
-	local leadX = math.clamp(vel.X * 0.14, -7, 7)
-	local leadZ = math.clamp(vel.Z * 0.14, -7, 7)
-	local leadY = 0
-
-	if humAlvo then
-		local estado = humAlvo:GetState()
-		if estado == Enum.HumanoidStateType.Jumping or estado == Enum.HumanoidStateType.Freefall or math.abs(vel.Y) > 1.5 then
-			leadY = math.clamp(vel.Y * 0.1, -3.5, 4)
-		end
-	end
+	local leadX = math.clamp(vel.X * 0.035, -2.0, 2.0)
+	local leadZ = math.clamp(vel.Z * 0.035, -2.0, 2.0)
+	local leadY = math.clamp(vel.Y * 0.015, -1.0, 1.0)
 
 	return Vector3.new(posBase.X + leadX, posBase.Y + leadY, posBase.Z + leadZ)
 end
 
--- ==================== AUTO KILL ASSASSINO (EXIGE ARMA DO XERIFE + MIRA EM MOVIMENTO) ====================
+-- ==================== AUTO KILL ASSASSINO ====================
 local function buscarAssassinoVivo()
 	for _, plr in pairs(Pessoas:GetPlayers()) do
 		if plr ~= p and plr.Character and detectarPapelMM2(plr) == "Murderer" then
@@ -859,7 +854,7 @@ end
 
 task.spawn(function()
 	while true do
-		task.wait(0.03)
+		task.wait(0.02)
 		if autoKillAssassinoAtivo then
 			pcall(function()
 				local meuChar = p.Character
@@ -884,11 +879,7 @@ task.spawn(function()
 
 				executandoTpTiroRetorno = true
 				local pontoMira = calcularPontoMiraAssassino(alvoPlr.Character, alvoPart)
-				local velAlvo = alvoPart.AssemblyLinearVelocity
-				local dirMov = Vector3.new(velAlvo.X, 0, velAlvo.Z)
-
-				local deslocamento = dirMov.Magnitude > 1 and (-dirMov.Unit * 3.5) or (-alvoPart.CFrame.LookVector * 3.5)
-				local posTiro = pontoMira + deslocamento + Vector3.new(0, 0.35, 0)
+				local posTiro = alvoPart.Position - (alvoPart.CFrame.LookVector * 2.0) + Vector3.new(0, 0.2, 0)
 
 				hrp.AssemblyLinearVelocity = Vector3.zero
 				hrp.AssemblyAngularVelocity = Vector3.zero
@@ -1090,17 +1081,40 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
 	end
 end)
 
-local toggleCaveiraBtn = criarBtn(abaConfig, "Caveira Invisível: OFF", UDim2.new(0, 0, 0, 57))
+local togglePainelInicioBtn = criarBtn(abaConfig, "Painel Fechado ao Iniciar: ON", UDim2.new(0, 0, 0, 57))
+togglePainelInicioBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+togglePainelInicioBtn.MouseButton1Click:Connect(function()
+	painelIniciarFechado = not painelIniciarFechado
+	togglePainelInicioBtn.Text = painelIniciarFechado and "Painel Fechado ao Iniciar: ON" or "Painel Fechado ao Iniciar: OFF"
+	togglePainelInicioBtn.BackgroundColor3 = painelIniciarFechado and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
+end)
+
+local toggleCaveiraBtn = criarBtn(abaConfig, "Caveira Invisível: OFF", UDim2.new(0, 0, 0, 92))
 toggleCaveiraBtn.MouseButton1Click:Connect(function()
-	caveiraVisivelAtiva = not caveiraVisivelAtiva
-	titleButton.ImageTransparency = caveiraVisivelAtiva and 0 or 1
-	toggleCaveiraBtn.Text = caveiraVisivelAtiva and "Caveira Invisível: OFF" or "Caveira Invisível: ON"
-	toggleCaveiraBtn.BackgroundColor3 = caveiraVisivelAtiva and Color3.fromRGB(25, 25, 25) or Color3.fromRGB(180, 0, 0)
+	if titleButton then
+		caveiraVisivelAtiva = not caveiraVisivelAtiva
+		titleButton.ImageTransparency = caveiraVisivelAtiva and 0 or 1
+		toggleCaveiraBtn.Text = caveiraVisivelAtiva and "Caveira Invisível: OFF" or "Caveira Invisível: ON"
+		toggleCaveiraBtn.BackgroundColor3 = caveiraVisivelAtiva and Color3.fromRGB(25, 25, 25) or Color3.fromRGB(180, 0, 0)
+	end
+end)
+
+local removerHstBtn = criarBtn(abaConfig, "Tirar Botão HST: OFF", UDim2.new(0, 0, 0, 127))
+removerHstBtn.MouseButton1Click:Connect(function()
+	if not hstBotaoRemovido then
+		hstBotaoRemovido = true
+		if titleButton then
+			titleButton:Destroy()
+			titleButton = nil
+		end
+		removerHstBtn.Text = "Tirar Botão HST: REMOVIDO"
+		removerHstBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+	end
 end)
 
 local lblTemas = Instance.new("TextLabel", abaConfig)
 lblTemas.Size = UDim2.new(1, 0, 0, 20)
-lblTemas.Position = UDim2.new(0, 0, 0, 95)
+lblTemas.Position = UDim2.new(0, 0, 0, 163)
 lblTemas.Text = "--- ESTILOS DE TEMA ---"
 lblTemas.Font = Enum.Font.Code
 lblTemas.TextSize = 12
@@ -1108,20 +1122,20 @@ lblTemas.TextColor3 = Color3.fromRGB(255, 255, 255)
 lblTemas.BackgroundTransparency = 1
 lblTemas.ZIndex = 5
 
-local btnTemaHacker = criarBtn(abaConfig, "💻 Tema Hacker", UDim2.new(0, 0, 0, 120))
-local btnTemaMinecraft = criarBtn(abaConfig, "⛏️ Tema Minecraft", UDim2.new(0, 0, 0, 155))
-local btnTemaTubers = criarBtn(abaConfig, "👺 Tema Tubers93", UDim2.new(0, 0, 0, 190))
-local btnTemaPadrao = criarBtn(abaConfig, "🔄 Tema Padrão (RGB)", UDim2.new(0, 0, 0, 225))
+local btnTemaHacker = criarBtn(abaConfig, "💻 Tema Hacker", UDim2.new(0, 0, 0, 188))
+local btnTemaMinecraft = criarBtn(abaConfig, "⛏️ Tema Minecraft", UDim2.new(0, 0, 0, 223))
+local btnTemaTubers = criarBtn(abaConfig, "👺 Tema Tubers93", UDim2.new(0, 0, 0, 258))
+local btnTemaPadrao = criarBtn(abaConfig, "🔄 Tema Padrão (RGB)", UDim2.new(0, 0, 0, 293))
 
 btnTemaHacker.MouseButton1Click:Connect(function() aplicarTema("hacker") end)
 btnTemaMinecraft.MouseButton1Click:Connect(function() aplicarTema("minecraft") end)
 btnTemaTubers.MouseButton1Click:Connect(function() aplicarTema("tubers93") end)
 btnTemaPadrao.MouseButton1Click:Connect(function() aplicarTema("padrao") end)
 
-local corPainelBtn = criarBtn(abaConfig, "Cor do Painel: RGB 🌈", UDim2.new(0, 0, 0, 265))
+local corPainelBtn = criarBtn(abaConfig, "Cor do Painel: RGB 🌈", UDim2.new(0, 0, 0, 333))
 local subMenuCores = Instance.new("Frame", abaConfig)
 subMenuCores.Size = UDim2.new(1, 0, 0, 190)
-subMenuCores.Position = UDim2.new(0, 0, 0, 297)
+subMenuCores.Position = UDim2.new(0, 0, 0, 365)
 subMenuCores.BackgroundTransparency = 1
 subMenuCores.Visible = false
 subMenuCores.ZIndex = 5
