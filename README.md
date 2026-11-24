@@ -101,7 +101,7 @@ local textoVersao = Instance.new("TextLabel", fundoPreto)
 textoVersao.Size = UDim2.new(1, 0, 0.1, 0)
 textoVersao.Position = UDim2.new(0, 0, 0.58, 0)
 textoVersao.BackgroundTransparency = 1
-textoVersao.Text = "Versão: v70"
+textoVersao.Text = "Versão: v71"
 textoVersao.TextColor3 = Color3.fromRGB(200, 200, 200)
 textoVersao.TextSize = 24
 textoVersao.Font = Enum.Font.Code
@@ -239,7 +239,7 @@ local tamanhosOriginaisHrps = {}
 local c00lkiddAtivo = false
 local jogadorSelecionado = nil
 
--- VARIÁVEIS DO SISTEMA DE TP DA ABA "COISAS LEGAIS"
+-- VARIÁVEIS DO SISTEMA DE TP
 local coordenadasMarcadas = nil
 local posicaoInicioRetorno = nil
 local estadoCicloTp = 1
@@ -409,7 +409,7 @@ strokeMain.Color = Color3.fromRGB(255, 0, 0)
 local titulo = Instance.new("TextLabel", f)
 titulo.Size = UDim2.new(1, -40, 0, 30)
 titulo.Position = UDim2.new(0, 10, 0, 5)
-titulo.Text = "Lorenzo Hub v70"
+titulo.Text = "Lorenzo Hub v71"
 titulo.Font = Enum.Font.Code
 titulo.TextSize = 16
 titulo.TextColor3 = Color3.fromRGB(255, 0, 0)
@@ -614,7 +614,6 @@ end
 -- ==================== ABA COISAS LEGAIS 👍💪 ====================
 local tpMarcaLocalBtn = criarBtn(abaInuteis, "Marca local de tp", UDim2.new(0, 0, 0, 0))
 local tpEscolhidoBtn = criarBtn(abaInuteis, "TP até local escolhido", UDim2.new(0, 0, 0, 35))
-local tpLobbyBtn = criarBtn(abaInuteis, "TP até lobby", UDim2.new(0, 0, 0, 70))
 
 tpMarcaLocalBtn.MouseButton1Click:Connect(function()
 	local hrp = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
@@ -656,15 +655,6 @@ tpEscolhidoBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
-tpLobbyBtn.MouseButton1Click:Connect(function()
-	local hrp = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
-	if hrp then
-		hrp.AssemblyLinearVelocity = Vector3.zero
-		hrp.AssemblyAngularVelocity = Vector3.zero
-		hrp.CFrame = CFrame.new(COORDENADA_LOBBY)
-	end
-end)
-
 -- ==================== ABA MURDER MYSTERY (MM2) ====================
 local mm2AssassinoBtn = criarBtn(abaMm2, "Ver Assassinos: OFF", UDim2.new(0, 0, 0, 0))
 local mm2XerifeBtn = criarBtn(abaMm2, "Ver Xerifes/Heróis: OFF", UDim2.new(0, 0, 0, 35))
@@ -676,8 +666,18 @@ local aimbotAssassinoBtn = criarBtn(abaMm2, "Aimbot Apenas no Assassino: OFF", U
 local mm2AutoFarmBtn = criarBtn(abaMm2, "Auto Farm: OFF", UDim2.new(0, 0, 0, 245))
 local autoKillAssassinoBtn = criarBtn(abaMm2, "Auto Kill Assassino: OFF", UDim2.new(0, 0, 0, 280))
 local autoKillAllMurderBtn = criarBtn(abaMm2, "Auto Kill All Murder: OFF", UDim2.new(0, 0, 0, 315))
+local tpLobbyBtn = criarBtn(abaMm2, "TP até lobby", UDim2.new(0, 0, 0, 350))
 
 killAllFacaBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+
+tpLobbyBtn.MouseButton1Click:Connect(function()
+	local hrp = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+	if hrp then
+		hrp.AssemblyLinearVelocity = Vector3.zero
+		hrp.AssemblyAngularVelocity = Vector3.zero
+		hrp.CFrame = CFrame.new(COORDENADA_LOBBY)
+	end
+end)
 
 mm2AssassinoBtn.MouseButton1Click:Connect(function()
 	mm2AssassinoAtivo = not mm2AssassinoAtivo
