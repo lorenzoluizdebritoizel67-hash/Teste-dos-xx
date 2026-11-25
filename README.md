@@ -101,7 +101,7 @@ local textoVersao = Instance.new("TextLabel", fundoPreto)
 textoVersao.Size = UDim2.new(1, 0, 0.1, 0)
 textoVersao.Position = UDim2.new(0, 0, 0.58, 0)
 textoVersao.BackgroundTransparency = 1
-textoVersao.Text = "Versão: v75"
+textoVersao.Text = "Versão: v76"
 textoVersao.TextColor3 = Color3.fromRGB(200, 200, 200)
 textoVersao.TextSize = 24
 textoVersao.Font = Enum.Font.Code
@@ -411,7 +411,7 @@ strokeMain.Color = Color3.fromRGB(255, 0, 0)
 local titulo = Instance.new("TextLabel", f)
 titulo.Size = UDim2.new(1, -40, 0, 30)
 titulo.Position = UDim2.new(0, 10, 0, 5)
-titulo.Text = "xX_Xx Hub v75"
+titulo.Text = "xX_Xx Hub v76"
 titulo.Font = Enum.Font.Code
 titulo.TextSize = 16
 titulo.TextColor3 = Color3.fromRGB(255, 0, 0)
@@ -829,9 +829,9 @@ local function calcularPontoMiraAssassino(alvoChar, alvoPart)
 	local posBase = tronco.Position
 	local vel = alvoPart.AssemblyLinearVelocity
 
-	local leadX = math.clamp(vel.X * 0.035, -2.0, 2.0)
-	local leadZ = math.clamp(vel.Z * 0.035, -2.0, 2.0)
-	local leadY = math.clamp(vel.Y * 0.015, -1.0, 1.0)
+	local leadX = math.clamp(vel.X * 0.03, -1.8, 1.8)
+	local leadZ = math.clamp(vel.Z * 0.03, -1.8, 1.8)
+	local leadY = math.clamp(vel.Y * 0.012, -0.8, 0.8)
 
 	return Vector3.new(posBase.X + leadX, posBase.Y + leadY, posBase.Z + leadZ)
 end
@@ -879,7 +879,7 @@ task.spawn(function()
 
 				executandoTpTiroRetorno = true
 				local pontoMira = calcularPontoMiraAssassino(alvoPlr.Character, alvoPart)
-				local posTiro = alvoPart.Position - (alvoPart.CFrame.LookVector * 2.0) + Vector3.new(0, 0.2, 0)
+				local posTiro = alvoPart.Position - (alvoPart.CFrame.LookVector * 1.8) + Vector3.new(0, 0.2, 0)
 
 				hrp.AssemblyLinearVelocity = Vector3.zero
 				hrp.AssemblyAngularVelocity = Vector3.zero
