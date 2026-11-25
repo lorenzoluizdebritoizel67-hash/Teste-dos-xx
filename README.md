@@ -101,7 +101,7 @@ local textoVersao = Instance.new("TextLabel", fundoPreto)
 textoVersao.Size = UDim2.new(1, 0, 0.1, 0)
 textoVersao.Position = UDim2.new(0, 0, 0.58, 0)
 textoVersao.BackgroundTransparency = 1
-textoVersao.Text = "Versão: v76"
+textoVersao.Text = "Versão: v77"
 textoVersao.TextColor3 = Color3.fromRGB(200, 200, 200)
 textoVersao.TextSize = 24
 textoVersao.Font = Enum.Font.Code
@@ -411,7 +411,7 @@ strokeMain.Color = Color3.fromRGB(255, 0, 0)
 local titulo = Instance.new("TextLabel", f)
 titulo.Size = UDim2.new(1, -40, 0, 30)
 titulo.Position = UDim2.new(0, 10, 0, 5)
-titulo.Text = "xX_Xx Hub v76"
+titulo.Text = "xX_Xx Hub v77"
 titulo.Font = Enum.Font.Code
 titulo.TextSize = 16
 titulo.TextColor3 = Color3.fromRGB(255, 0, 0)
@@ -836,6 +836,26 @@ local function calcularPontoMiraAssassino(alvoChar, alvoPart)
 	return Vector3.new(posBase.X + leadX, posBase.Y + leadY, posBase.Z + leadZ)
 end
 
+local function dispararArmaNoPonto(armaAtual, pontoMira)
+	if not armaAtual then return end
+	pcall(function()
+		armaAtual:Activate()
+	end)
+	for _, desc in pairs(armaAtual:GetDescendants()) do
+		if desc:IsA("RemoteEvent") then
+			local nome = desc.Name:lower()
+			if nome:find("shoot") or nome:find("fire") or nome:find("gun") or nome:find("beam") then
+				pcall(function()
+					desc:FireServer(1, pontoMira, "AH2")
+				end)
+				pcall(function()
+					desc:FireServer(pontoMira)
+				end)
+			end
+		end
+	end
+end
+
 -- ==================== AUTO KILL ASSASSINO ====================
 local function buscarAssassinoVivo()
 	for _, plr in pairs(Pessoas:GetPlayers()) do
@@ -887,9 +907,7 @@ task.spawn(function()
 				Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, pontoMira)
 
 				if armaAtual.Parent == meuChar then
-					pcall(function()
-						armaAtual:Activate()
-					end)
+					dispararArmaNoPonto(armaAtual, pontoMira)
 				end
 			end)
 		else
