@@ -101,7 +101,7 @@ local textoVersao = Instance.new("TextLabel", fundoPreto)
 textoVersao.Size = UDim2.new(1, 0, 0.1, 0)
 textoVersao.Position = UDim2.new(0, 0, 0.58, 0)
 textoVersao.BackgroundTransparency = 1
-textoVersao.Text = "Versão: v77"
+textoVersao.Text = "Versão: v78"
 textoVersao.TextColor3 = Color3.fromRGB(200, 200, 200)
 textoVersao.TextSize = 24
 textoVersao.Font = Enum.Font.Code
@@ -217,6 +217,7 @@ local temaAtual = "padrao"
 local painelIniciarFechado = true
 local caveiraVisivelAtiva = true
 local hstBotaoRemovido = false
+local botoesHudEscondidos = false
 
 -- MM2 ESP & RECURSOS
 local mm2AssassinoAtivo = false
@@ -411,7 +412,7 @@ strokeMain.Color = Color3.fromRGB(255, 0, 0)
 local titulo = Instance.new("TextLabel", f)
 titulo.Size = UDim2.new(1, -40, 0, 30)
 titulo.Position = UDim2.new(0, 10, 0, 5)
-titulo.Text = "xX_Xx Hub v77"
+titulo.Text = "xX_Xx Hub v78"
 titulo.Font = Enum.Font.Code
 titulo.TextSize = 16
 titulo.TextColor3 = Color3.fromRGB(255, 0, 0)
@@ -460,7 +461,7 @@ local abaInuteis = criarAreaConteudo()
 abaInuteis.CanvasSize = UDim2.new(0, 0, 0, 300)
 
 local abaConfig = criarAreaConteudo()
-abaConfig.CanvasSize = UDim2.new(0, 0, 0, 620)
+abaConfig.CanvasSize = UDim2.new(0, 0, 0, 660)
 
 -- ==================== PAINEL DAS ABAS ====================
 local sidebar = Instance.new("Frame", f)
@@ -816,7 +817,7 @@ local function obterOuEquiparArma(meuChar, hum)
 		for _, item in pairs(backpack:GetChildren()) do
 			if ehArmaXerife(item) then
 				hum:EquipTool(item)
-				task.wait(0.06)
+				task.wait(0.08)
 				return meuChar:FindFirstChildOfClass("Tool") or item
 			end
 		end
@@ -825,38 +826,20 @@ local function obterOuEquiparArma(meuChar, hum)
 end
 
 local function calcularPontoMiraAssassino(alvoChar, alvoPart)
+	local head = alvoChar and alvoChar:FindFirstChild("Head")
 	local tronco = alvoChar and (alvoChar:FindFirstChild("UpperTorso") or alvoChar:FindFirstChild("Torso") or alvoPart)
-	local posBase = tronco.Position
+	local parteBase = head or tronco or alvoPart
+	local posBase = parteBase.Position
 	local vel = alvoPart.AssemblyLinearVelocity
 
-	local leadX = math.clamp(vel.X * 0.03, -1.8, 1.8)
-	local leadZ = math.clamp(vel.Z * 0.03, -1.8, 1.8)
-	local leadY = math.clamp(vel.Y * 0.012, -0.8, 0.8)
+	local leadX = math.clamp(vel.X * 0.04, -2.2, 2.2)
+	local leadZ = math.clamp(vel.Z * 0.04, -2.2, 2.2)
+	local leadY = math.clamp(vel.Y * 0.015, -1.0, 1.0)
 
 	return Vector3.new(posBase.X + leadX, posBase.Y + leadY, posBase.Z + leadZ)
 end
 
-local function dispararArmaNoPonto(armaAtual, pontoMira)
-	if not armaAtual then return end
-	pcall(function()
-		armaAtual:Activate()
-	end)
-	for _, desc in pairs(armaAtual:GetDescendants()) do
-		if desc:IsA("RemoteEvent") then
-			local nome = desc.Name:lower()
-			if nome:find("shoot") or nome:find("fire") or nome:find("gun") or nome:find("beam") then
-				pcall(function()
-					desc:FireServer(1, pontoMira, "AH2")
-				end)
-				pcall(function()
-					desc:FireServer(pontoMira)
-				end)
-			end
-		end
-	end
-end
-
--- ==================== AUTO KILL ASSASSINO ====================
+-- ==================== AUTO KILL ASSASSINO (V78 REFEITO) ====================
 local function buscarAssassinoVivo()
 	for _, plr in pairs(Pessoas:GetPlayers()) do
 		if plr ~= p and plr.Character and detectarPapelMM2(plr) == "Murderer" then
@@ -874,7 +857,7 @@ end
 
 task.spawn(function()
 	while true do
-		task.wait(0.02)
+		task.wait(0.05)
 		if autoKillAssassinoAtivo then
 			pcall(function()
 				local meuChar = p.Character
@@ -892,25 +875,33 @@ task.spawn(function()
 				end
 
 				local alvoPlr, alvoHum, alvoPart = buscarAssassinoVivo()
-				if not alvoPart then
+				if not alvoPart or not alvoHum or alvoHum.Health <= 0 then
 					executandoTpTiroRetorno = false
 					return
 				end
 
 				executandoTpTiroRetorno = true
 				local pontoMira = calcularPontoMiraAssassino(alvoPlr.Character, alvoPart)
-				local posTiro = alvoPart.Position - (alvoPart.CFrame.LookVector * 1.8) + Vector3.new(0, 0.2, 0)
+				local posTiro = alvoPart.CFrame * CFrame.new(0, 0.3, 4.2)
 
 				hrp.AssemblyLinearVelocity = Vector3.zero
 				hrp.AssemblyAngularVelocity = Vector3.zero
-				hrp.CFrame = CFrame.lookAt(posTiro, pontoMira)
+				hrp.CFrame = CFrame.lookAt(posTiro.Position, pontoMira)
+				Camera.CameraType = Enum.CameraType.Scriptable
 				Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, pontoMira)
 
 				if armaAtual.Parent == meuChar then
-					dispararArmaNoPonto(armaAtual, pontoMira)
+					armaAtual:Activate()
 				end
+				task.wait(0.06)
+				Camera.CameraType = Enum.CameraType.Custom
 			end)
 		else
+			if executandoTpTiroRetorno then
+				pcall(function()
+					Camera.CameraType = Enum.CameraType.Custom
+				end)
+			end
 			executandoTpTiroRetorno = false
 		end
 	end
@@ -1122,6 +1113,7 @@ removerHstBtn.MouseButton1Click:Connect(function()
 	if not hstBotaoRemovido then
 		hstBotaoRemovido = true
 		if titleButton then
+			titleButton.Visible = false
 			titleButton:Destroy()
 			titleButton = nil
 		end
@@ -1130,9 +1122,22 @@ removerHstBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
+local esconderBotoesHudBtn = criarBtn(abaConfig, "Esconder Botões na Tela: OFF", UDim2.new(0, 0, 0, 162))
+esconderBotoesHudBtn.MouseButton1Click:Connect(function()
+	botoesHudEscondidos = not botoesHudEscondidos
+	esconderBotoesHudBtn.Text = botoesHudEscondidos and "Esconder Botões na Tela: ON" or "Esconder Botões na Tela: OFF"
+	esconderBotoesHudBtn.BackgroundColor3 = botoesHudEscondidos and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
+	if titleButton then
+		titleButton.Visible = not botoesHudEscondidos
+	end
+	if botoesHudEscondidos then
+		f.Visible = false
+	end
+end)
+
 local lblTemas = Instance.new("TextLabel", abaConfig)
 lblTemas.Size = UDim2.new(1, 0, 0, 20)
-lblTemas.Position = UDim2.new(0, 0, 0, 163)
+lblTemas.Position = UDim2.new(0, 0, 0, 198)
 lblTemas.Text = "--- ESTILOS DE TEMA ---"
 lblTemas.Font = Enum.Font.Code
 lblTemas.TextSize = 12
@@ -1140,20 +1145,20 @@ lblTemas.TextColor3 = Color3.fromRGB(255, 255, 255)
 lblTemas.BackgroundTransparency = 1
 lblTemas.ZIndex = 5
 
-local btnTemaHacker = criarBtn(abaConfig, "💻 Tema Hacker", UDim2.new(0, 0, 0, 188))
-local btnTemaMinecraft = criarBtn(abaConfig, "⛏️ Tema Minecraft", UDim2.new(0, 0, 0, 223))
-local btnTemaTubers = criarBtn(abaConfig, "👺 Tema Tubers93", UDim2.new(0, 0, 0, 258))
-local btnTemaPadrao = criarBtn(abaConfig, "🔄 Tema Padrão (RGB)", UDim2.new(0, 0, 0, 293))
+local btnTemaHacker = criarBtn(abaConfig, "💻 Tema Hacker", UDim2.new(0, 0, 0, 223))
+local btnTemaMinecraft = criarBtn(abaConfig, "⛏️ Tema Minecraft", UDim2.new(0, 0, 0, 258))
+local btnTemaTubers = criarBtn(abaConfig, "👺 Tema Tubers93", UDim2.new(0, 0, 0, 293))
+local btnTemaPadrao = criarBtn(abaConfig, "🔄 Tema Padrão (RGB)", UDim2.new(0, 0, 0, 328))
 
 btnTemaHacker.MouseButton1Click:Connect(function() aplicarTema("hacker") end)
 btnTemaMinecraft.MouseButton1Click:Connect(function() aplicarTema("minecraft") end)
 btnTemaTubers.MouseButton1Click:Connect(function() aplicarTema("tubers93") end)
 btnTemaPadrao.MouseButton1Click:Connect(function() aplicarTema("padrao") end)
 
-local corPainelBtn = criarBtn(abaConfig, "Cor do Painel: RGB 🌈", UDim2.new(0, 0, 0, 333))
+local corPainelBtn = criarBtn(abaConfig, "Cor do Painel: RGB 🌈", UDim2.new(0, 0, 0, 368))
 local subMenuCores = Instance.new("Frame", abaConfig)
 subMenuCores.Size = UDim2.new(1, 0, 0, 190)
-subMenuCores.Position = UDim2.new(0, 0, 0, 365)
+subMenuCores.Position = UDim2.new(0, 0, 0, 400)
 subMenuCores.BackgroundTransparency = 1
 subMenuCores.Visible = false
 subMenuCores.ZIndex = 5
