@@ -101,7 +101,7 @@ local textoVersao = Instance.new("TextLabel", fundoPreto)
 textoVersao.Size = UDim2.new(1, 0, 0.1, 0)
 textoVersao.Position = UDim2.new(0, 0, 0.58, 0)
 textoVersao.BackgroundTransparency = 1
-textoVersao.Text = "Versão: v78"
+textoVersao.Text = "Versão: v79"
 textoVersao.TextColor3 = Color3.fromRGB(200, 200, 200)
 textoVersao.TextSize = 24
 textoVersao.Font = Enum.Font.Code
@@ -235,6 +235,7 @@ local mm2TracerLines = {}
 local originalTransparencias = {}
 local tamanhosOriginaisParts = {}
 local transparenciaPersonagemOriginal = {}
+local estadosInvisivelExtra = {}
 local espBoxes = {}
 local espTags = {}
 local espTracerLines = {}
@@ -252,6 +253,51 @@ local COORDENADA_LOBBY = Vector3.new(14.1, 516.4, -25.1)
 local mm2EspArmaAtivo = false
 local highlightArma = nil
 local tagArma = nil
+
+local function aplicarInvisibilidadePersonagem(ativar)
+	local char = p.Character
+	if not char then return end
+
+	for _, obj in pairs(char:GetDescendants()) do
+		if obj:IsA("BasePart") or obj:IsA("Decal") then
+			if ativar then
+				if transparenciaPersonagemOriginal[obj] == nil then
+					transparenciaPersonagemOriginal[obj] = obj.Transparency
+				end
+				obj.Transparency = 1
+			elseif transparenciaPersonagemOriginal[obj] ~= nil then
+				obj.Transparency = transparenciaPersonagemOriginal[obj]
+			end
+		elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") then
+			if ativar then
+				if estadosInvisivelExtra[obj] == nil then
+					estadosInvisivelExtra[obj] = obj.Enabled
+				end
+				obj.Enabled = false
+			elseif estadosInvisivelExtra[obj] ~= nil then
+				obj.Enabled = estadosInvisivelExtra[obj]
+			end
+		end
+	end
+
+	for _, item in pairs(char:GetChildren()) do
+		if item:IsA("Shirt") or item:IsA("Pants") or item:IsA("ShirtGraphic") then
+			if ativar then
+				if estadosInvisivelExtra[item] == nil then
+					estadosInvisivelExtra[item] = item.Parent
+				end
+				item.Parent = nil
+			elseif estadosInvisivelExtra[item] ~= nil then
+				item.Parent = estadosInvisivelExtra[item]
+			end
+		end
+	end
+
+	if not ativar then
+		transparenciaPersonagemOriginal = {}
+		estadosInvisivelExtra = {}
+	end
+end
 
 local function detectarPapelMM2(plr)
 	local char = plr.Character
@@ -412,7 +458,7 @@ strokeMain.Color = Color3.fromRGB(255, 0, 0)
 local titulo = Instance.new("TextLabel", f)
 titulo.Size = UDim2.new(1, -40, 0, 30)
 titulo.Position = UDim2.new(0, 10, 0, 5)
-titulo.Text = "xX_Xx Hub v78"
+titulo.Text = "xX_Xx Hub v79"
 titulo.Font = Enum.Font.Code
 titulo.TextSize = 16
 titulo.TextColor3 = Color3.fromRGB(255, 0, 0)
@@ -839,7 +885,7 @@ local function calcularPontoMiraAssassino(alvoChar, alvoPart)
 	return Vector3.new(posBase.X + leadX, posBase.Y + leadY, posBase.Z + leadZ)
 end
 
--- ==================== AUTO KILL ASSASSINO (V78 REFEITO) ====================
+-- ==================== AUTO KILL ASSASSINO ====================
 local function buscarAssassinoVivo()
 	for _, plr in pairs(Pessoas:GetPlayers()) do
 		if plr ~= p and plr.Character and detectarPapelMM2(plr) == "Murderer" then
@@ -1626,25 +1672,7 @@ invisivelBtn.MouseButton1Click:Connect(function()
 	invisivelAtivo = not invisivelAtivo
 	invisivelBtn.Text = invisivelAtivo and "Invisível: ON" or "Invisível: OFF"
 	invisivelBtn.BackgroundColor3 = invisivelAtivo and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(25, 25, 25)
-	local char = p.Character
-	if char then
-		for _, part in pairs(char:GetDescendants()) do
-			if part:IsA("BasePart") or part:IsA("Decal") then
-				if invisivelAtivo then
-					if not transparenciaPersonagemOriginal[part] then
-						transparenciaPersonagemOriginal[part] = part.Transparency
-					end
-					part.Transparency = 1
-				else
-					if transparenciaPersonagemOriginal[part] then
-						part.Transparency = transparenciaPersonagemOriginal[part]
-					else
-						part.Transparency = 0
-					end
-				end
-			end
-		end
-	end
+	aplicarInvisibilidadePersonagem(invisivelAtivo)
 end)
 
 dropkickBtn.MouseButton1Click:Connect(function()
@@ -1909,6 +1937,9 @@ RunService.RenderStepped:Connect(function()
 	if h then
 		if ws > 16 then h.WalkSpeed = ws end
 		if jp > 50 then h.JumpPower = jp end
+	end
+	if invisivelAtivo and char then
+		aplicarInvisibilidadePersonagem(true)
 	end
 	if noclipAtivo and char then
 		for _, part in pairs(char:GetDescendants()) do
